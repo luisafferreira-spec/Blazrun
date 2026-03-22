@@ -1,0 +1,2528 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlazRun — Ignite Your Race</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://tvmbcsmoqikwplncdopl.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2bWJjc21vcWlrd3BsbmNkb3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMjYwOTcsImV4cCI6MjA4OTcwMjA5N30.IQUq5MpslxPnFx0rP2CpEYpNkuOeL_tr5mlsn3c0tCg';
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibHVpc2FmZXJuYW5kZXMiLCJhIjoiY21uMGd3MzkzMGlqYzJzc2ZtZHJmdW5tdSJ9.29jAoLVPCaMLddlWXNuBOA';
+let sb;
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) {}
+</script>
+<style>
+:root {
+  --teal:#00C2A8;--teal-dim:#00C2A815;--teal-border:#00C2A840;--teal-glow:rgba(0,194,168,0.25);
+  --yellow:#FFDD57;--yellow-dim:#FFDD5715;--yellow-glow:rgba(255,221,87,0.25);
+  --red:#ff5555;--red-dim:#ff555515;
+  --purple:#9b5de5;--purple-dim:#9b5de515;
+  --bg:#0D0D1A;--bg2:#12122A;--bg3:#1a1a30;--bg4:#0a0a14;
+  --border:#1e1e35;--text:#ffffff;--text2:#8888aa;--text3:#444466;
+  --font-d:'Barlow Condensed',sans-serif;
+  --font-b:'Barlow',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{color:var(--text);font-family:var(--font-b);font-size:14px;}
+
+/* ══ ANIMATIONS ══ */
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slidein{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideright{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scalein{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes glow{0%,100%{box-shadow:0 0 8px var(--teal-glow)}50%{box-shadow:0 0 20px var(--teal-glow)}}
+@keyframes xppop{0%{opacity:0;transform:translateY(0) scale(0.8)}30%{opacity:1;transform:translateY(-10px) scale(1.1)}80%{opacity:1;transform:translateY(-20px) scale(1)}100%{opacity:0;transform:translateY(-30px) scale(0.9)}}
+@keyframes shimmer{0%{background-position:-200px 0}100%{background-position:calc(200px + 100%) 0}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes barfill{from{width:0%}to{width:var(--w)}}
+@keyframes countup{from{opacity:0}to{opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes streakburn{0%,100%{}50%{}}
+
+/* ══ LAYOUT ══ */
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{
+  width:220px;background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;
+  animation:slidein .4s ease;
+}
+.logo{padding:22px 18px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.logo-icon{width:38px;height:38px;background:var(--teal);border-radius:11px;display:flex;align-items:center;justify-content:center;animation:glow 3s infinite;}
+.logo-icon svg{width:22px;height:22px;}
+.logo-text{font-family:var(--font-d);font-size:26px;font-weight:900;letter-spacing:-.5px;color:var(--yellow);}
+.logo-text span{color:var(--teal);}
+.sidebar-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
+.ni{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+  cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);
+  transition:all .2s;position:relative;
+}
+.ni:hover{background:var(--bg3);color:var(--text);transform:translateX(3px);}
+.ni.active{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);}
+.ni.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--teal);border-radius:0 3px 3px 0;}
+.ni .ic{font-size:16px;width:20px;text-align:center;}
+.ni .notif-dot{width:7px;height:7px;background:var(--red);border-radius:50%;margin-left:auto;animation:pulse 1.5s infinite;}
+.ndiv{height:1px;background:var(--border);margin:6px 8px;}
+.sidebar-bottom{padding:10px 8px;border-top:1px solid var(--border);}
+.user-card{
+  background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:8px;
+  border:1px solid var(--border);transition:border-color .2s;cursor:pointer;
+}
+.user-card:hover{border-color:var(--teal-border);}
+.user-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.user-av{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--teal-dim);border:2px solid var(--teal);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:var(--teal);flex-shrink:0;
+}
+.user-name{font-size:13px;font-weight:600;color:var(--yellow);}
+.user-level{font-size:11px;color:var(--text2);}
+.xp-bar-wrap{}
+.xp-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:3px;}
+.xp-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.xp-fill{height:100%;background:var(--teal);border-radius:2px;width:68%;transition:width 1s ease;}
+.pro-btn{
+  width:100%;padding:10px;background:var(--teal);color:#003D35;
+  border:none;border-radius:10px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:var(--font-b);letter-spacing:.3px;
+  transition:all .2s;
+}
+.pro-btn:hover{transform:translateY(-1px);box-shadow:0 4px 15px var(--teal-glow);}
+.pro-btn:active{transform:translateY(0);}
+
+/* ══ MAIN ══ */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.page{display:none;flex-direction:column;flex:1;overflow:hidden;}
+.page.active{display:flex;animation:fadein .25s ease;}
+.scroll{flex:1;overflow-y:auto;padding:24px;}
+.scroll::-webkit-scrollbar{width:4px;}
+.scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* PAGE HEADER */
+.ph{padding:20px 24px 16px;border-bottom:1px solid var(--border);background:var(--bg);display:flex;justify-content:space-between;align-items:center;}
+.ph-title{font-family:var(--font-d);font-size:30px;font-weight:900;letter-spacing:-.5px;color:var(--teal);}
+.ph-title.yellow{color:var(--yellow);}
+.ph-sub{font-size:12px;color:var(--text2);margin-top:3px;}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;transition:border-color .2s,transform .2s;}
+.card:hover{border-color:#2a2a45;}
+.card-t{border-color:var(--teal-border);background:linear-gradient(135deg,#0D1A18,var(--bg2));}
+.card-y{border-color:#FFDD5730;background:linear-gradient(135deg,#1a1608,var(--bg2));}
+.card-r{border-color:#ff555530;background:linear-gradient(135deg,#1a0808,var(--bg2));}
+.card-p{border-color:#9b5de530;background:linear-gradient(135deg,#120a1e,var(--bg2));}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.lbl{font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.ttl{font-size:15px;font-weight:600;color:var(--text);}
+.sub{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5;}
+.bdg{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;display:inline-block;}
+.bt{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);}
+.by{background:var(--yellow-dim);color:var(--yellow);border:1px solid #FFDD5740;}
+.br{background:var(--red-dim);color:var(--red);border:1px solid #ff555540;}
+.bp{background:var(--purple-dim);color:var(--purple);border:1px solid #9b5de540;}
+.prog{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:8px;}
+.pf{height:100%;border-radius:3px;transition:width .8s ease;}
+.btn-t{background:var(--teal);color:#003D35;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-b);transition:all .2s;}
+.btn-t:hover{transform:translateY(-1px);box-shadow:0 4px 12px var(--teal-glow);}
+.btn-o{background:transparent;color:var(--teal);border:1px solid var(--teal-border);border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-b);transition:all .2s;}
+.btn-o:hover{background:var(--teal-dim);}
+.sn{font-family:var(--font-d);font-size:32px;font-weight:900;color:var(--yellow);}
+.sec{font-family:var(--font-d);font-size:20px;font-weight:700;margin-bottom:14px;margin-top:22px;color:var(--teal);}
+.sec:first-child{margin-top:0;}
+
+/* ══ LOGIN PAGE ══ */
+.login-page{
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  height:100vh;background:var(--bg4);position:relative;overflow:hidden;
+}
+.login-page.active{display:flex;}
+.login-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 30% 50%,rgba(0,194,168,0.08) 0%,transparent 60%),
+             radial-gradient(ellipse at 70% 30%,rgba(255,221,87,0.05) 0%,transparent 50%);
+  pointer-events:none;
+}
+.login-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:20px;
+  padding:36px;width:100%;max-width:400px;
+  animation:scalein .4s ease;
+  position:relative;z-index:1;
+}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:28px;}
+.login-logo-icon{width:48px;height:48px;background:var(--teal);border-radius:14px;display:flex;align-items:center;justify-content:center;animation:glow 3s infinite;}
+.login-logo-icon svg{width:28px;height:28px;}
+.login-logo-text{font-family:var(--font-d);font-size:36px;font-weight:900;color:var(--yellow);}
+.login-logo-text span{color:var(--teal);}
+.login-tagline{text-align:center;font-size:13px;color:var(--text2);margin-bottom:28px;margin-top:-20px;}
+.login-tabs{display:flex;background:var(--bg3);border-radius:10px;padding:4px;margin-bottom:24px;}
+.ltab{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-radius:8px;transition:all .2s;}
+.ltab.active{background:var(--teal);color:#003D35;font-weight:700;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;color:var(--text2);margin-bottom:5px;display:block;}
+.form-input{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:11px 14px;color:var(--text);
+  font-size:14px;font-family:var(--font-b);outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.form-input:focus{border-color:var(--teal-border);box-shadow:0 0 0 3px var(--teal-dim);}
+.form-input::placeholder{color:var(--text3);}
+.form-submit{
+  width:100%;background:var(--teal);color:#003D35;border:none;
+  border-radius:11px;padding:13px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:var(--font-d);letter-spacing:.5px;
+  margin-top:6px;transition:all .2s;
+}
+.form-submit:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--teal-glow);}
+.form-divider{display:flex;align-items:center;gap:10px;margin:16px 0;}
+.form-divider::before,.form-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.form-divider span{font-size:12px;color:var(--text3);}
+.social-btn{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:11px;font-size:13px;font-weight:500;
+  cursor:pointer;font-family:var(--font-b);color:var(--text);
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.social-btn:hover{background:var(--bg4);border-color:#2a2a45;}
+.login-footer{text-align:center;font-size:12px;color:var(--text2);margin-top:18px;}
+.login-footer span{color:var(--teal);cursor:pointer;}
+
+/* ══ MAP PAGE ══ */
+.map-container{flex:1;position:relative;overflow:hidden;background:#0a0a18;}
+.map-svg-wrap{position:absolute;inset:0;}
+.map-overlay-top{
+  position:absolute;top:16px;left:16px;right:16px;z-index:5;
+  display:flex;align-items:flex-start;gap:10px;pointer-events:none;
+}
+.map-overlay-top>*{pointer-events:all;}
+.map-title-card{
+  background:rgba(13,13,26,0.9);backdrop-filter:blur(12px);
+  border:1px solid var(--border);border-radius:14px;padding:12px 16px;
+  animation:fadein .5s ease;
+}
+.map-title{font-family:var(--font-d);font-size:22px;font-weight:900;color:var(--yellow);}
+.map-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.map-stats-row{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;}
+.map-stat-pill{
+  background:rgba(13,13,26,0.9);backdrop-filter:blur(12px);
+  border:1px solid var(--border);border-radius:12px;
+  padding:10px 14px;text-align:center;min-width:70px;
+  animation:fadeup .5s ease;
+}
+.map-stat-num{font-family:var(--font-d);font-size:18px;font-weight:900;color:var(--yellow);}
+.map-stat-lbl{font-size:9px;color:var(--text2);margin-top:1px;}
+.map-bottom{
+  position:absolute;bottom:0;left:0;right:0;z-index:5;
+  background:rgba(13,13,26,0.95);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+}
+.map-bottom-tabs{display:flex;border-bottom:1px solid var(--border);}
+.mbtab{flex:1;padding:11px;text-align:center;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .2s;}
+.mbtab.active{color:var(--yellow);border-bottom:2px solid var(--yellow);}
+.map-panel{display:none;padding:14px 16px;animation:fadein .2s ease;}
+.map-panel.active{display:flex;flex-direction:column;gap:10px;}
+.zone-info-row{display:flex;gap:8px;flex-wrap:wrap;}
+.zone-pill{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:8px 12px;flex:1;min-width:120px;
+  cursor:pointer;transition:all .2s;
+}
+.zone-pill:hover{border-color:var(--teal-border);transform:translateY(-1px);}
+.zone-pill-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.zone-pill-name{font-size:12px;font-weight:500;color:var(--text);}
+.zone-pill-sub{font-size:10px;color:var(--text2);margin-top:1px;}
+.legend-wrap{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.start-run-big{
+  background:var(--teal);color:#003D35;border:none;
+  border-radius:12px;padding:12px 24px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:var(--font-d);letter-spacing:.5px;
+  transition:all .2s;white-space:nowrap;
+}
+.start-run-big:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--teal-glow);}
+
+/* ══ RUN ACTIVE ══ */
+.run-wrap{display:flex;flex:1;overflow:hidden;}
+.run-map{flex:1;position:relative;background:#0a0a18;overflow:hidden;}
+.run-panel{
+  width:260px;background:var(--bg2);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;padding:20px;gap:14px;overflow-y:auto;
+}
+.run-live-badge{
+  display:flex;align-items:center;gap:6px;background:var(--red-dim);
+  border:1px solid #ff555540;border-radius:20px;padding:5px 12px;
+  font-size:11px;font-weight:700;color:var(--red);letter-spacing:.5px;
+  width:fit-content;animation:pulse 2s infinite;
+}
+.live-dot{width:6px;height:6px;background:var(--red);border-radius:50%;animation:pulse 1s infinite;}
+.run-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.run-stat-box{background:var(--bg3);border-radius:12px;padding:12px;text-align:center;}
+.run-stat-num{font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--yellow);}
+.run-stat-lbl{font-size:10px;color:var(--text2);margin-top:2px;}
+.run-zone-box{background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:12px;padding:12px;}
+.run-zone-name{font-size:13px;font-weight:600;color:var(--teal);}
+.run-zone-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.run-prog{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:8px;}
+.run-prog-fill{height:100%;background:var(--teal);border-radius:3px;transition:width 1s ease;}
+.run-boss-box{background:#FFDD5710;border:1px solid #FFDD5730;border-radius:12px;padding:12px;}
+.stop-btn{
+  width:100%;background:#ff444420;color:var(--red);
+  border:1px solid #ff555540;border-radius:12px;padding:12px;
+  font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font-d);
+  transition:all .2s;margin-top:auto;
+}
+.stop-btn:hover{background:#ff444430;}
+.xp-popup{
+  position:absolute;background:var(--yellow);color:#003D35;
+  border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;
+  font-family:var(--font-d);letter-spacing:.5px;pointer-events:none;
+  animation:xppop 2s ease forwards;
+}
+.conquest-banner{
+  position:absolute;top:20px;left:20px;
+  background:var(--teal);color:#003D35;border-radius:12px;
+  padding:10px 16px;font-size:13px;font-weight:700;font-family:var(--font-d);
+  animation:fadein .3s ease;letter-spacing:.5px;
+}
+
+/* ══ DUEL PAGE ══ */
+.dsb{background:linear-gradient(135deg,#0D1A18,var(--bg2));border:1px solid var(--teal-border);border-radius:16px;padding:24px;margin-bottom:20px;}
+.dps{display:flex;align-items:center;gap:16px;}
+.dp{flex:1;text-align:center;}
+.dpav{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:0 auto 8px;transition:transform .2s;}
+.dpav:hover{transform:scale(1.05);}
+.dkm{font-family:var(--font-d);font-size:40px;font-weight:900;margin-top:4px;}
+.dvs{width:48px;height:48px;border-radius:50%;background:var(--teal-dim);border:2px solid var(--teal-border);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--teal);flex-shrink:0;}
+.dbar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin-top:16px;}
+.dby{background:var(--teal);transition:width .8s ease;}
+.dbr{background:var(--red);transition:width .8s ease;}
+.feed-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;transition:all .2s;animation:fadein .3s ease;}
+.feed-item:hover{border-color:#2a2a45;transform:translateX(3px);}
+.fi{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+
+/* ══ LEADERBOARD ══ */
+.lbf{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.lbfb{padding:7px 16px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid var(--border);color:var(--text2);background:transparent;font-family:var(--font-b);font-weight:500;transition:all .2s;}
+.lbfb:hover{border-color:#2a2a45;color:var(--text);}
+.lbfb.active{background:var(--teal-dim);border-color:var(--teal-border);color:var(--teal);}
+.lbt{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.lbr{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid var(--border);transition:all .2s;}
+.lbr:last-child{border-bottom:none;}
+.lbr:hover{background:var(--bg3);}
+.lbr.me{background:#00C2A808;border-left:3px solid var(--teal);}
+.lbrnk{width:28px;font-size:14px;font-weight:700;text-align:center;flex-shrink:0;}
+.lbstat{font-family:var(--font-d);font-size:20px;font-weight:900;color:var(--yellow);}
+
+/* ══ COACH ══ */
+.coach-scroll{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:12px;}
+.mb{padding:14px 16px;border-radius:16px;max-width:82%;animation:fadein .3s ease;}
+.mb.ai{background:#0D1A18;border:1px solid var(--teal-border);align-self:flex-start;}
+.mb.user{background:var(--bg3);border:1px solid var(--border);align-self:flex-end;}
+.ml{font-size:10px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px;}
+.mb.ai .ml{color:var(--teal);}
+.mb.user .ml{color:var(--text3);}
+.mt{font-size:13px;color:#ccc;line-height:1.6;}
+.coach-chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 24px;border-top:1px solid var(--border);}
+.cc{background:#0D1A18;border:1px solid var(--teal-border);border-radius:20px;padding:8px 14px;font-size:12px;color:var(--teal);cursor:pointer;font-family:var(--font-b);transition:all .2s;}
+.cc:hover{background:var(--teal-dim);transform:translateY(-1px);}
+.coach-input-row{display:flex;gap:10px;padding:14px 24px;border-top:1px solid var(--border);background:var(--bg);}
+.ci{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;font-family:var(--font-b);outline:none;transition:all .2s;}
+.ci:focus{border-color:var(--teal-border);box-shadow:0 0 0 3px var(--teal-dim);}
+
+/* ══ COMMUNITY ══ */
+.event-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;transition:all .2s;animation:fadein .3s ease;}
+.event-card:hover{border-color:#2a2a45;transform:translateY(-2px);}
+.rav{width:28px;height:28px;border-radius:50%;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-left:-7px;transition:transform .2s;}
+.rav:hover{transform:scale(1.15);z-index:1;}
+.rav:first-child{margin-left:0;}
+.clan-item{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;transition:all .2s;}
+.clan-item:hover{border-color:#2a2a45;transform:translateX(3px);}
+.clan-ic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.nearby-item{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--border);transition:all .2s;}
+.nearby-item:hover{background:var(--bg3);}
+.nearby-item:last-child{border-bottom:none;}
+.online-dot{width:8px;height:8px;background:#00ff88;border-radius:50%;animation:pulse 2s infinite;flex-shrink:0;}
+
+/* ══ PROFILE ══ */
+.ph-hero{background:linear-gradient(135deg,#10091c,var(--bg2));border:1px solid var(--border);border-radius:18px;padding:26px;display:flex;align-items:center;gap:22px;margin-bottom:22px;animation:fadein .4s ease;}
+.ph-av{width:84px;height:84px;border-radius:50%;background:var(--teal-dim);border:3px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:var(--teal);flex-shrink:0;animation:glow 3s infinite;}
+.ph-name{font-family:var(--font-d);font-size:42px;font-weight:900;color:var(--teal);letter-spacing:-0.5px;line-height:1;}
+.badgeit{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;font-size:12px;font-weight:500;transition:transform .2s;cursor:default;}
+.badgeit:hover{transform:scale(1.05);}
+.b-earn{background:var(--teal-dim);border:1px solid var(--teal-border);color:var(--teal);}
+.b-lock{background:var(--bg3);border:1px solid var(--border);color:var(--text3);}
+.b-gold{background:var(--yellow-dim);border:1px solid #FFDD5740;color:var(--yellow);}
+.streak-box{background:linear-gradient(135deg,#1a1208,var(--bg2));border:1px solid #FFDD5730;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;}
+.streak-num{font-family:var(--font-d);font-size:48px;font-weight:900;color:var(--yellow);}
+
+/* ══ PRO PAGE ══ */
+.pro-hero{
+  text-align:center;padding:48px 24px;
+  background:linear-gradient(135deg,#0D1A18,#0a0a18,#1a1008);
+  border:1px solid var(--teal-border);border-radius:20px;margin-bottom:26px;
+  position:relative;overflow:hidden;animation:fadein .4s ease;
+}
+.pro-hero::before{
+  content:'⚡';position:absolute;font-size:200px;opacity:0.03;
+  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
+}
+.pro-hero-title{font-family:var(--font-d);font-size:52px;font-weight:900;color:var(--teal);animation:float 4s ease infinite;}
+.pro-hero-price{font-family:var(--font-d);font-size:36px;font-weight:900;color:var(--yellow);margin-top:8px;}
+.plan-cards{display:grid;grid-template-columns:1fr 1.1fr;gap:16px;margin-bottom:24px;}
+.plan-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:26px;transition:all .3s;}
+.plan-card:hover{transform:translateY(-3px);}
+.plan-card.featured{border:2px solid var(--teal);background:linear-gradient(135deg,#0D1A18,var(--bg2));box-shadow:0 0 30px rgba(0,194,168,0.1);}
+.plan-price-big{font-family:var(--font-d);font-size:48px;font-weight:900;color:var(--teal);margin:8px 0 4px;}
+.plan-feat{display:flex;align-items:center;gap:8px;font-size:13px;color:#ccc;margin-bottom:10px;}
+.plan-feat::before{content:'';width:6px;height:6px;background:var(--teal);border-radius:50%;flex-shrink:0;}
+.plan-cta{width:100%;background:var(--teal);color:#003D35;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--font-d);letter-spacing:.5px;margin-top:14px;transition:all .2s;}
+.plan-cta:hover{transform:translateY(-2px);box-shadow:0 8px 25px var(--teal-glow);}
+.feature-showcase{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.feat-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;transition:all .2s;animation:fadein .4s ease;}
+.feat-box:hover{border-color:var(--teal-border);transform:translateY(-3px);}
+.feat-icon{font-size:32px;margin-bottom:10px;display:block;animation:float 4s ease infinite;}
+
+/* ══ BOTTOM NAV (mobile) ══ */
+.bnav{display:none;background:var(--bg2);border-top:1px solid var(--border);padding:8px 0 12px;}
+.bnavs{display:flex;}
+.bni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;transition:all .2s;}
+.bni-ic{font-size:20px;transition:transform .2s;}
+.bni.active .bni-ic{transform:scale(1.15);}
+.bni-lb{font-size:9px;color:var(--text3);font-weight:500;transition:color .2s;}
+.bni.active .bni-lb{color:var(--teal);}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .bnav{display:block;}
+  .scroll{padding:16px;}
+  .ph{padding:14px 16px 12px;}
+  .g2,.plan-cards{grid-template-columns:1fr;}
+  .g3,.feature-showcase{grid-template-columns:1fr 1fr;}
+  .g4{grid-template-columns:1fr 1fr;}
+  .ph-hero{flex-direction:column;text-align:center;}
+  .run-wrap{flex-direction:column;}
+  .run-panel{width:100%;height:200px;}
+}
+@media(max-width:480px){
+  .g3,.feature-showcase,.g4{grid-template-columns:1fr;}
+  .duel-scoreboard .dps{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ LOGIN PAGE ══════════ -->
+<div class="login-page active" id="login-page">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M3 19L8 6L13 13L17 8L21 14" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18 14L21 14L21 17" stroke="#FFDD57" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="login-logo-text"><span>Blaz</span>Run</div>
+    </div>
+    <div class="login-tagline">Ignite your race. Conquer your city. 🔥</div>
+
+    <div class="login-tabs">
+      <div class="ltab active" onclick="switchLoginTab('login')">Anmelden</div>
+      <div class="ltab" onclick="switchLoginTab('register')">Registrieren</div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <div class="form-group">
+        <label class="form-label">E-Mail</label>
+        <input class="form-input" type="email" placeholder="deine@email.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Passwort</label>
+        <input class="form-input" type="password" placeholder="••••••••"/>
+      </div>
+      <button class="form-submit" onclick="enterApp()">🔥 Los laufen!</button>
+      <div class="form-divider"><span>oder</span></div>
+      <button class="social-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Mit Google anmelden
+      </button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="register-form" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input id="reg-username" class="form-input" type="text" placeholder="BlazRunner_Max"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-Mail</label>
+        <input id="reg-email" class="form-input" type="email" placeholder="deine@email.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stadt</label>
+        <input id="reg-city" class="form-input" type="text" placeholder="Zürich, Berlin, Paris..."/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ich bin</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px">
+          <div id="gender-male" onclick="selectGender('male')" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:all .2s;font-size:13px;color:var(--text2)">
+            👨 Mann
+          </div>
+          <div id="gender-female" onclick="selectGender('female')" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:all .2s;font-size:13px;color:var(--text2)">
+            👩 Frau
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Passwort</label>
+        <input class="form-input" type="password" placeholder="mind. 8 Zeichen"/>
+      </div>
+      <button class="form-submit" onclick="enterApp()">⚡ Account erstellen</button>
+    </div>
+
+    <div class="login-footer">Durch die Anmeldung stimmst du unseren <span onclick="alert('AGB: legal@blazrun.app')">AGB</span> und der <span onclick="alert('Datenschutz: datenschutz@blazrun.app')">Datenschutzrichtlinie</span> zu.</div>
+  </div>
+</div>
+
+<!-- ══════════ MAIN APP ══════════ -->
+<div class="app" id="main-app" style="display:none">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M3 19L8 6L13 13L17 8L21 14" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18 14L21 14L21 17" stroke="#FFDD57" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="logo-text"><span>Blaz</span>Run</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="ni active" onclick="sp('map')"><span class="ic">🗺️</span> Karte</div>
+      <div class="ni" onclick="sp('duels')"><span class="ic">⚔️</span> Duelle <div class="notif-dot"></div></div>
+      <div class="ni" onclick="sp('leaderboard')"><span class="ic">🏆</span> Rangliste</div>
+      <div class="ni" onclick="sp('coach')"><span class="ic">🤖</span> KI-Coach</div>
+      <div class="ndiv"></div>
+      <div class="ni" onclick="sp('community')"><span class="ic">👥</span> Community</div>
+      <div class="ni" onclick="sp('zones')"><span class="ic">🏴</span> Meine Zonen</div>
+      <div class="ndiv"></div>
+      <div class="ni" onclick="sp('profile')"><span class="ic">👤</span> Profil</div>
+      <div class="ni" onclick="sp('pro')"><span class="ic">⚡</span> PRO</div>
+      <div class="ni" onclick="sp('guide')"><span class="ic">📖</span> Anleitung</div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-card" onclick="sp('profile')">
+        <div class="user-row">
+          <div class="user-av dyn-avatar" style="overflow:hidden">B</div>
+          <div>
+            <div class="user-name dyn-username">BlazRunner</div>
+            <div class="user-level">Level <span id="sb-level">1</span> · <span id="sb-xp-val">0</span> / 1000 XP</div>
+          </div>
+        </div>
+        <div class="xp-bar-wrap">
+          <div class="xp-labels"><span id="sb-xp">0 XP</span><span>Level <span id="sb-next">2</span> → noch</span></div>
+          <div class="xp-bar"><div class="xp-fill"></div></div>
+        </div>
+      </div>
+      <button class="pro-btn" onclick="sp('pro')">⚡ PRO upgraden</button>
+      <!-- LEGAL LINKS SIDEBAR -->
+      <div style="margin-top:10px;padding:8px 4px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+        <span onclick="sp('datenschutz')" style="font-size:10px;color:var(--text3);cursor:pointer;transition:color .2s" onmouseover="this.style.color='#00C2A8'" onmouseout="this.style.color='var(--text3)'">Datenschutz</span>
+        <span style="font-size:10px;color:var(--text3)">·</span>
+        <span onclick="sp('agb')" style="font-size:10px;color:var(--text3);cursor:pointer;transition:color .2s" onmouseover="this.style.color='#00C2A8'" onmouseout="this.style.color='var(--text3)'">AGB</span>
+        <span style="font-size:10px;color:var(--text3)">·</span>
+        <span onclick="sp('impressum')" style="font-size:10px;color:var(--text3);cursor:pointer;transition:color .2s" onmouseover="this.style.color='#00C2A8'" onmouseout="this.style.color='var(--text3)'">Impressum</span>
+        <span style="font-size:10px;color:var(--text3)">·</span>
+        <span onclick="sp('cookies')" style="font-size:10px;color:var(--text3);cursor:pointer;transition:color .2s" onmouseover="this.style.color='#00C2A8'" onmouseout="this.style.color='var(--text3)'">Cookies</span>
+      </div>
+      <div style="text-align:center;font-size:10px;color:var(--text3);padding:4px 0">© 2026 BlazRun · Alle Rechte vorbehalten</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ── MAP ── -->
+    <div class="page" id="page-map">
+      <div class="ph">
+        <div><div class="ph-title">🗺️ BlazMap</div><div class="ph-sub">Zürich · Starte deinen ersten Lauf!</div></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          
+          
+          <button class="start-run-big" onclick="sp('run')">🏃 Lauf starten</button>
+        </div>
+      </div>
+      <div class="map-container" id="mapbox-container" style="position:relative;flex:1;overflow:hidden;">
+        <!-- Canvas Karte -->
+        <div id="blazmap" style="position:absolute;inset:0;width:100%;height:100%;"></div>
+
+        <!-- Top Stats Overlay -->
+        <div style="position:absolute;top:16px;left:16px;right:16px;z-index:5;display:flex;gap:10px;align-items:flex-start;pointer-events:none">
+          <div style="background:rgba(13,13,26,0.92);backdrop-filter:blur(12px);border:1px solid #1e1e35;border-radius:14px;padding:10px 16px;pointer-events:all">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#FFDD57;">🗺️ BlazMap</div>
+            <div style="font-size:11px;color:#8888aa;margin-top:2px" id="map-location-sub">Zürich · GPS wird geladen...</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-left:auto;pointer-events:all">
+            <div style="background:rgba(13,13,26,0.92);backdrop-filter:blur(12px);border:1px solid #1e1e35;border-radius:12px;padding:10px 14px;text-align:center">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#FFDD57;">12</div>
+              <div style="font-size:9px;color:#8888aa;margin-top:1px">Zonen</div>
+            </div>
+            <div style="background:rgba(13,13,26,0.92);backdrop-filter:blur(12px);border:1px solid #1e1e35;border-radius:12px;padding:10px 14px;text-align:center">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#FFDD57;">680</div>
+              <div style="font-size:9px;color:#8888aa;margin-top:1px">XP</div>
+            </div>
+            <div style="background:rgba(13,13,26,0.92);backdrop-filter:blur(12px);border:1px solid #ff555540;border-radius:12px;padding:10px 14px;text-align:center">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#ff5555">2</div>
+              <div style="font-size:9px;color:#8888aa;margin-top:1px">Bedroht</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Locate Me Button -->
+        <div onclick="locateMe()" style="position:absolute;top:16px;right:16px;z-index:10;width:40px;height:40px;background:rgba(13,13,26,0.92);backdrop-filter:blur(12px);border:1px solid #1e1e35;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;margin-top:70px" title="Meinen Standort">📍</div>
+
+        <!-- Floating bottom panel -->
+        <div class="map-bottom">
+          <div class="map-bottom-tabs">
+            <div class="mbtab active" onclick="switchMapTab('overview')">Übersicht</div>
+            <div class="mbtab" onclick="switchMapTab('zones')">Meine Zonen</div>
+            <div class="mbtab" onclick="switchMapTab('friends')">Freunde</div>
+          </div>
+
+          <div class="map-panel active" id="mp-overview">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+              <div class="legend-wrap">
+                <div class="leg"><div class="leg-dot" style="background:var(--teal)"></div>Deine Zonen</div>
+                <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>Gegner</div>
+                <div class="leg"><div class="leg-dot" style="background:var(--yellow)"></div>Boss Zone</div>
+                <div class="leg"><div class="leg-dot" style="background:var(--purple)"></div>Clan</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                
+                
+                <button class="start-run-big" onclick="sp('run')">🏃 Jetzt laufen!</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="map-panel" id="mp-zones">
+            <div class="zone-info-row">
+<div id="map-zones-row-inner" style="color:var(--text2);font-size:13px">Noch keine Zonen — lauf los! 🏃</div>
+              <div class="zone-pill" style="border-color:#ff555540"><div class="zone-pill-dot" style="background:var(--red)"></div><div><div class="zone-pill-name" style="color:var(--red)">Seefeld ⚠️</div><div class="zone-pill-sub">Angriff!</div></div></div>
+            </div>
+          </div>
+
+          <div class="map-panel" id="mp-friends">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+<div id="map-friends-inner" style="color:var(--text2);font-size:13px">Noch keine Freunde online</div>
+              <button class="btn-o" style="padding:8px 14px;font-size:12px" onclick="sp('community')">+ Mehr Läufer finden</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RUN ACTIVE ── -->
+    <div class="page" id="page-run">
+      <div class="ph" style="background:#0D1A18;border-color:var(--teal-border)">
+        <div>
+          <div class="run-live-badge"><div class="live-dot"></div>LIVE TRACKING</div>
+          <div class="ph-title" style="margin-top:6px">Lauf aktiv</div>
+        </div>
+        <button onclick="sp('map')" style="background:#ff444420;color:var(--red);border:1px solid #ff555540;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer">⏹ Lauf beenden</button>
+      </div>
+      <div class="run-wrap">
+        <!-- Live Map -->
+        <div class="run-map">
+          <svg width="100%" height="100%" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <rect width="600" height="400" fill="#0a0a18"/>
+            <line x1="0" y1="100" x2="600" y2="100" stroke="#141428" stroke-width="5"/>
+            <line x1="0" y1="200" x2="600" y2="200" stroke="#141428" stroke-width="5"/>
+            <line x1="0" y1="300" x2="600" y2="300" stroke="#141428" stroke-width="5"/>
+            <line x1="150" y1="0" x2="150" y2="400" stroke="#141428" stroke-width="5"/>
+            <line x1="300" y1="0" x2="300" y2="400" stroke="#141428" stroke-width="5"/>
+            <line x1="450" y1="0" x2="450" y2="400" stroke="#141428" stroke-width="5"/>
+            <!-- Zone fill -->
+            <polygon points="75,350 75,300 150,300 150,200 300,200 300,100 450,100" fill="#00C2A810"/>
+            <!-- Route -->
+            <polyline points="50,350 75,350 75,300 150,300 150,200 300,200 300,100 400,100" stroke="#00C2A8" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="400,100 450,100 450,200" stroke="#00C2A850" stroke-width="3" fill="none" stroke-dasharray="8,4" stroke-linecap="round"/>
+            <!-- Conquering zone -->
+            <rect x="155" y="5" width="140" height="90" rx="5" fill="#00C2A828" stroke="#00C2A8" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <text x="225" y="42" text-anchor="middle" fill="#00C2A8" font-size="13" font-weight="700" font-family="Barlow Condensed,sans-serif">RIESBACH</text>
+            <text x="225" y="60" text-anchor="middle" fill="#00C2A8" font-size="11" font-family="Barlow,sans-serif">Eroberung... 72%</text>
+            <!-- Conquest banner -->
+            <rect x="5" y="5" width="145" height="52" rx="10" fill="#00C2A8"/>
+            <text x="77" y="28" text-anchor="middle" fill="#003D35" font-size="12" font-weight="700" font-family="Barlow Condensed,sans-serif">🏴 ZONE EROBERT!</text>
+            <text x="77" y="46" text-anchor="middle" fill="#003D35" font-size="10" font-family="Barlow,sans-serif">Wiedikon — +120 XP</text>
+            <!-- XP Popup -->
+            <rect x="310" y="58" width="90" height="26" rx="13" fill="#FFDD57"/>
+            <text x="355" y="75" text-anchor="middle" fill="#003D35" font-size="12" font-weight="700" font-family="Barlow Condensed,sans-serif">+40 XP ⚡</text>
+            <!-- Player -->
+            <circle cx="400" cy="100" r="22" fill="#00C2A818"/>
+            <circle cx="400" cy="100" r="12" fill="#00C2A8" stroke="white" stroke-width="2.5"/>
+            <text x="400" y="104" text-anchor="middle" fill="white" font-size="11" font-weight="700">Du</text>
+            <!-- Boss arrow -->
+            <text x="470" y="148" fill="#FFDD57" font-size="12" font-family="Barlow,sans-serif" font-weight="600">⚡ Boss Zone → 0.8km</text>
+            <!-- Friend nearby -->
+            <circle cx="270" cy="195" r="9" fill="#9b5de5" stroke="white" stroke-width="1.5"/>
+            <text x="270" y="199" text-anchor="middle" fill="white" font-size="8" font-weight="700">A</text>
+            <text x="270" y="213" text-anchor="middle" fill="#9b5de5" font-size="9" font-family="Barlow,sans-serif">Alex läuft mit!</text>
+          </svg>
+        </div>
+
+        <!-- Stats Panel -->
+        <div class="run-panel">
+          <div class="run-live-badge"><div class="live-dot"></div>GPS AKTIV</div>
+
+          <div class="run-stat-grid">
+            <div class="run-stat-box"><div class="run-stat-num">3.2</div><div class="run-stat-lbl">km gelaufen</div></div>
+            <div class="run-stat-box"><div class="run-stat-num">18:24</div><div class="run-stat-lbl">Zeit</div></div>
+            <div class="run-stat-box"><div class="run-stat-num">5:45</div><div class="run-stat-lbl">min/km</div></div>
+            <div class="run-stat-box"><div class="run-stat-num" style="color:var(--teal)">142</div><div class="run-stat-lbl">♡ Puls</div></div>
+          </div>
+
+          <div style="background:var(--bg3);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-family:var(--font-d);font-size:32px;font-weight:900;color:var(--yellow)">+180 ⚡</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">XP verdient</div>
+          </div>
+
+          <div class="run-zone-box">
+            <div class="run-zone-name">🏴 Territorium wird aufgebaut</div>
+            <div class="run-zone-sub">Laufe noch 0.8 km durch das Gebiet</div>
+            <div class="run-prog"><div class="run-prog-fill" style="width:72%"></div></div>
+            <div style="font-size:10px;color:var(--text2);margin-top:4px;display:flex;justify-content:space-between"><span>72% abgedeckt</span><span>+120 XP bei Erfolg</span></div>
+          </div>
+
+          <div class="run-boss-box">
+            <div style="font-size:12px;font-weight:600;color:var(--yellow)">⚡ Boss Zone nah!</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:3px">Zürich HB · +500 XP · 0.8 km entfernt</div>
+            <div class="prog" style="margin-top:8px"><div class="pf" style="width:35%;background:var(--yellow)"></div></div>
+          </div>
+
+          <div style="background:var(--purple-dim);border:1px solid #9b5de530;border-radius:12px;padding:12px">
+            <div style="font-size:12px;font-weight:600;color:var(--purple)">👥 Alex läuft mit dir!</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">0.2 km entfernt · Team-Bonus: +20%</div>
+          </div>
+
+          <button class="stop-btn" onclick="sp('map')">⏹ Lauf beenden</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DUELS ── -->
+    <div class="page" id="page-duels">
+      <div class="ph">
+        <div><div class="ph-title">⚔️ Duelle</div><div class="ph-sub">Fordere Freunde heraus!</div></div>
+        <button class="btn-t" onclick="openChallenge()">+ Freund herausfordern</button>
+      </div>
+      <div class="scroll">
+
+        <!-- CHALLENGE EINLADEN BANNER -->
+        <div style="background:linear-gradient(135deg,#0D1A18,#12122A);border:1px solid var(--teal-border);border-radius:18px;padding:22px;margin-bottom:20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+          <div style="font-size:40px">🏆</div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-family:var(--font-d);font-size:20px;font-weight:900;color:var(--teal)">Freund herausfordern!</div>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px">Lad einen Freund ein — egal aus welchem Quartier. Am Ende vergleicht ihr wer weiter oder länger gelaufen ist.</div>
+          </div>
+          <button class="btn-t" style="white-space:nowrap" onclick="openChallenge()">⚔️ Challenge starten</button>
+        </div>
+
+        <div class="sec">Aktives Duell</div>
+
+        <div class="sec">Live-Feed</div>
+        <div id="duels-livefeed"><div style="padding:16px;text-align:center;color:var(--text2);font-size:13px">Noch keine Aktivität — starte einen Lauf! 🏃</div></div>
+
+
+      </div>
+    </div>
+
+    <!-- ── LEADERBOARD ── -->
+    <div class="page" id="page-leaderboard">
+      <div class="ph">
+        <div><div class="ph-title">🏆 Rangliste</div><div class="ph-sub">Deine Rangliste</div></div>
+        
+      </div>
+      <div class="scroll">
+        <div class="lbf">
+          <button class="lbfb active">Global 🌍</button>
+          <button class="lbfb">Freunde</button>
+          <button class="lbfb">Schweiz 🇨🇭</button>
+          <button class="lbfb">Deutschland 🇩🇪</button>
+          <button class="lbfb">Frankreich 🇫🇷</button>
+          <button class="lbfb">Diese Woche</button>
+          <button class="lbfb">Dieser Monat</button>
+        </div>
+        <div class="g3" style="margin-bottom:18px">
+          <div class="card" id="lb-p2" style="text-align:center;animation:fadein .4s ease .1s both"><div style="font-size:28px;margin-bottom:8px">🥈</div><div style="width:52px;height:52px;border-radius:50%;background:#aaa2;color:#aaa;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 8px">?</div><div style="font-size:15px;font-weight:600">—</div><div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:#aaa;margin-top:4px">0 XP</div></div>
+          <div class="card card-y" id="lb-p1" style="text-align:center;transform:scale(1.03);animation:fadein .4s ease"><div style="font-size:36px;margin-bottom:8px">🥇</div><div style="width:60px;height:60px;border-radius:50%;background:var(--yellow-dim);border:2px solid var(--yellow);color:var(--yellow);font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 8px">?</div><div style="font-size:16px;font-weight:600">—</div><div style="font-family:var(--font-d);font-size:32px;font-weight:900;color:var(--yellow);margin-top:4px">0 XP</div></div>
+          <div class="card" id="lb-p3" style="text-align:center;animation:fadein .4s ease .2s both"><div style="font-size:28px;margin-bottom:8px">🥉</div><div style="width:52px;height:52px;border-radius:50%;background:#cd7f3218;color:#cd7f32;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 8px">?</div><div style="font-size:15px;font-weight:600">—</div><div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:#cd7f32;margin-top:4px">0 XP</div></div>
+        </div>
+        <div class="lbt">
+<div id="lb-table-body"><div style="padding:20px;text-align:center;color:var(--text2);font-size:13px">⏳ Lädt...</div></div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COACH ── -->
+    <div class="page" id="page-coach" style="overflow:hidden">
+      <div class="ph">
+        <div><div class="ph-title">🤖 KI-Coach</div><div class="ph-sub">Persönlicher Trainingsplan · Claude AI · PRO Feature</div></div>
+        <div class="bdg bt">PRO</div>
+      </div>
+      <div class="coach-scroll">
+        <div class="mb ai"><div class="ml">KI-COACH</div><div class="mt">Hey! Ich bin dein persönlicher BlazRun Coach powered by Claude AI. Starte deinen ersten Lauf und ich analysiere deine Performance! 💪</div></div>
+      </div>
+      <div class="coach-chips">
+        <button class="cc">Verletzung melden</button>
+        <button class="cc">Pace analysieren</button>
+        <button class="cc">Boss Zone Strategie</button>
+        <button class="cc">Ernährungstipps</button>
+        <button class="cc">Nächste Zone empfehlen</button>
+        <button class="cc">Community Run planen</button>
+      </div>
+      <div class="coach-input-row">
+        <input class="ci" placeholder="Frag deinen persönlichen Coach..." type="text"/>
+        <button class="btn-t">Senden ↗</button>
+      </div>
+    </div>
+
+    <!-- ── COMMUNITY ── -->
+    <div class="page" id="page-community">
+      <div class="ph">
+        <div><div class="ph-title">👥 Community</div><div class="ph-sub">Triff andere Läufer</div></div>
+        <button class="btn-t">+ Clan beitreten</button>
+      </div>
+      <div class="scroll">
+        <div class="g2">
+          <div>
+            <div class="sec">Events in deiner Nähe</div>
+            <div class="event-card">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+                <div class="ttl">🏃 Zürich City Blaze</div>
+                <div class="bdg bt">Bald</div>
+              </div>
+              <div class="sub">Gemeinsam Zürich erkunden — alle Level willkommen!</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+                <div style="display:flex">
+                  <div class="rav" style="background:var(--teal-dim);color:var(--teal)">A</div>
+                  <div class="rav" style="background:var(--purple-dim);color:var(--purple)">M</div>
+                  <div class="rav" style="background:var(--yellow-dim);color:#c8a800">K</div>
+                  <div class="rav" style="background:var(--bg3);color:var(--text2)">+21</div>
+                </div>
+                
+              </div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button class="btn-t" style="flex:1;padding:9px">Teilnehmen ✓</button>
+                <button class="btn-o" style="padding:9px 14px">📍 Route</button>
+              </div>
+            </div>
+
+            
+
+            <div class="event-card">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+                <div class="ttl">🌍 CH · DE · FR Challenge — Januar</div>
+                <div class="bdg bp">Bald</div>
+              </div>
+              <div class="sub">CH 🇨🇭 vs DE 🇩🇪 vs FR 🇫🇷 · Wer läuft die meisten Zonen?</div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <div style="flex:1;background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">🇨🇭 Schweiz</div><div style="font-family:var(--font-d);font-size:20px;font-weight:900;color:var(--teal)"><span id="ch-count">—</span></div><div style="font-size:10px;color:var(--text2)">Zonen</div></div>
+                <div style="flex:1;background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">🇩🇪 DE</div><div style="font-family:var(--font-d);font-size:20px;font-weight:900;color:var(--yellow)"><span id="de-count">—</span></div><div style="font-size:10px;color:var(--text2)">Zonen</div></div>
+                <div style="flex:1;background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">🇫🇷 FR</div><div style="font-family:var(--font-d);font-size:20px;font-weight:900"><span id="fr-count">—</span></div><div style="font-size:10px;color:var(--text2)">Zonen</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="sec">Läufer in deiner Nähe</div>
+            <div id="community-runners" class="card" style="padding:0;overflow:hidden;margin-bottom:16px"><div style="padding:20px;text-align:center;color:var(--text2);font-size:13px">⏳ Lädt...</div></div>
+            <div class="sec">Clans beitreten</div>
+            <div class="clan-item">
+              <div class="clan-ic" style="background:var(--teal-dim)">🔥</div>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:600">BlazCrew Zürich</div>
+                <div style="font-size:12px;color:var(--text2);margin-top:2px">Zürich · Rang #1 CH</div>
+                <div class="prog"><div class="pf" style="width:85%;background:var(--teal)"></div></div>
+              </div>
+              <button class="btn-t" style="padding:8px 14px;font-size:12px">Beitreten</button>
+            </div>
+            <div class="clan-item">
+              <div class="clan-ic" style="background:var(--purple-dim)">⚡</div>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:600">SpeedPack ZH</div>
+                <div style="font-size:12px;color:var(--text2);margin-top:2px">Zürich · Rang #2 CH</div>
+                <div class="prog"><div class="pf" style="width:62%;background:var(--purple)"></div></div>
+              </div>
+              <button class="btn-o" style="padding:8px 14px;font-size:12px">Info</button>
+            </div>
+            <div class="clan-item">
+              <div class="clan-ic" style="background:var(--yellow-dim)">🏆</div>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:600">Berlin Blazers</div>
+                <div style="font-size:12px;color:var(--text2);margin-top:2px">Berlin · Rang #1 DE</div>
+                <div class="prog"><div class="pf" style="width:95%;background:var(--yellow)"></div></div>
+              </div>
+              <button class="btn-o" style="padding:8px 14px;font-size:12px">Info</button>
+            </div>
+
+            <div class="sec">Community Chat</div>
+            <div class="card" style="padding:14px">
+              <div style="display:flex;flex-direction:column;gap:10px;max-height:180px;overflow-y:auto">
+<div style="padding:12px;text-align:center;color:var(--text2);font-size:12px">Sei der Erste der etwas schreibt! 💬</div>
+                <div style="display:flex;gap:8px;align-items:flex-start;flex-direction:row-reverse"><div style="width:28px;height:28px;border-radius:50%;background:var(--teal-dim);color:var(--teal);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">B</div><div style="background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:10px;padding:8px 12px;flex:1;text-align:right"><div style="font-size:11px;color:var(--teal);margin-bottom:3px">Du</div><div style="font-size:13px;color:#ccc">Bin dabei! 🏃🔥</div></div></div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <input style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--font-b);outline:none" placeholder="Schreib etwas..."/>
+                <button class="btn-t" style="padding:8px 14px">↗</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ZONES ── -->
+    <div class="page" id="page-zones">
+      <div class="ph">
+        <div><div class="ph-title">🏴 Meine Zonen</div><div class="ph-sub">Noch keine Territorien — lauf los!</div></div>
+        <button class="btn-t" onclick="sp('map')">🗺️ Auf Karte</button>
+      </div>
+      <div class="scroll">
+        <div class="g4" style="margin-bottom:20px">
+          <div class="card" style="text-align:center"><div class="sn"><span id="p-zones">0</span></div><div style="font-size:11px;color:var(--text2);margin-top:2px">Zonen total</div></div>
+          <div class="card" style="text-align:center"><div class="sn">+250</div><div style="font-size:11px;color:var(--text2);margin-top:2px">XP / Tag</div></div>
+          <div class="card" style="text-align:center"><div class="sn" id="mz-threatened" style="color:var(--red)">0</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Bedroht</div></div>
+          <div class="card" style="text-align:center"><div class="sn" id="mz-clan" style="color:var(--purple)">0</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Clan Zonen</div></div>
+        </div>
+        <div class="sec" style="color:var(--red)">⚠️ Bedrohungen</div>
+        <div id="mz-threats"></div>
+        <div class="sec" style="color:var(--yellow)">⚡ Boss Zonen</div>
+        <div class="g2" style="margin-bottom:16px">
+          <div class="card card-y"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="ttl">⚡ Zürich HB</div><div class="sub">3 km durch das Gebiet</div></div><div style="font-family:var(--font-d);font-size:24px;font-weight:900;color:var(--yellow)">+500 XP</div></div><button class="btn-t" style="width:100%;margin-top:10px" onclick="sp('run')">Angreifen!</button></div>
+          <div class="card card-y"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="ttl">🏰 Lindenhügel</div><div class="sub">Wöchentliche Challenge</div></div><div style="font-family:var(--font-d);font-size:24px;font-weight:900;color:var(--yellow)">+800 XP</div></div><button class="btn-o" style="width:100%;margin-top:10px">Route anzeigen</button></div>
+        </div>
+        <div class="sec">Alle Zonen</div>
+        <div class="card" style="padding:0;overflow:hidden">
+<div id="mz-zone-list"><div style="padding:24px;text-align:center;color:var(--text2);font-size:13px">Noch keine Zonen — lauf los! 🏃</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROFILE ── -->
+    <div class="page" id="page-profile">
+      <div class="ph"><div class="ph-title yellow">👤 Profil</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-o" onclick="sp('pro')">⚡ PRO upgraden</button>
+          <button onclick="logout()" style="background:var(--red-dim);color:var(--red);border:1px solid #ff555540;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-b)">Ausloggen</button>
+        </div>
+      </div>
+      <div class="scroll">
+        <div class="ph-hero">
+          <div style="position:relative;flex-shrink:0">
+            <div class="ph-av dyn-avatar" onclick="openAvatarPicker()" style="cursor:pointer;position:relative">B</div>
+            <div onclick="openAvatarPicker()" style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--teal);border-radius:50%;border:2px solid var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</div>
+          </div>
+          <div style="flex:1">
+            <div class="ph-name" id="profile-username">BlazRunner</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+              <div id="profile-gender-badge" style="display:none;background:#00C2A815;border:1px solid #00C2A840;border-radius:20px;padding:3px 10px;font-size:12px;color:#00C2A8"></div>
+              <div style="font-size:13px;color:var(--text2)" id="profile-meta">Level 1 · Runner · Zürich 🏃</div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+              <div class="bdg bt">🏴 Gebietsherr</div>
+              <div class="bdg bp">BlazCrew ⚔️</div>
+              <div class="bdg by" style="animation:streakburn 3s infinite">🔥 <span id="p-streak-num">0</span> Tage Streak</div>
+            </div>
+            <div style="margin-top:12px;max-width:320px">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px"><span id="p-xp-label">0 / 1000 XP</span><span id="p-xp-next">Level 2 → 1000 XP noch</span></div>
+              <div class="xp-bar" style="height:6px"><div class="xp-fill" style="width:68%;height:100%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="streak-box" style="margin-bottom:20px">
+          <div style="font-size:32px">🔥</div>
+          <div>
+            <div class="streak-num">5</div>
+            <div style="font-size:11px;color:var(--text2)">Tage Streak</div>
+          </div>
+          <div style="flex:1;margin-left:8px">
+            <div style="font-size:13px;font-weight:600;color:var(--yellow)">Burn weiter!</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">Laufe heute um deinen Streak zu halten</div>
+            <div class="prog" style="margin-top:6px"><div class="pf" style="width:71%;background:var(--yellow)"></div></div>
+          </div>
+        </div>
+
+        <div class="g4" style="margin-bottom:22px">
+          <div class="card" style="text-align:center"><div class="sn"><span id="p-km">0</span></div><div style="font-size:11px;color:var(--text2);margin-top:2px">km / Monat</div></div>
+          <div class="card" style="text-align:center"><div class="sn" style="color:var(--teal)"><span id="p-zones">0</span></div><div style="font-size:11px;color:var(--text2);margin-top:2px">Zonen</div></div>
+          <div class="card" style="text-align:center"><div class="sn" style="color:var(--red)"><span id="p-duels">0</span></div><div style="font-size:11px;color:var(--text2);margin-top:2px">Duelle ✓</div></div>
+          <div class="card" style="text-align:center"><div class="sn" style="color:var(--purple)"><span id="p-xp">0</span></div><div style="font-size:11px;color:var(--text2);margin-top:2px">Total XP</div></div>
+        </div>
+
+        <div class="sec">Abzeichen</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px">
+          <div class="badgeit b-earn">🏴 Gebietsherr</div>
+          <div class="badgeit b-earn">⚔️ Duell-König</div>
+          <div class="badgeit b-gold">⚡ Boss Slayer</div>
+          <div class="badgeit b-earn">🌅 Early Bird</div>
+          <div class="badgeit b-earn">🔥 5-Day Streak</div>
+          <div class="badgeit b-earn">🤝 Erster Clan</div>
+          <div class="badgeit b-lock">👑 100km Club</div>
+          <div class="badgeit b-lock">🌍 CH·DE·FR Champion</div>
+          <div class="badgeit b-lock">🏆 Top 5 CH·DE·FR</div>
+          <div class="badgeit b-lock">💎 PRO Member</div>
+        </div>
+
+        <div class="sec">Statistiken</div>
+        <div class="g2">
+          <div class="card card-t"><div class="lbl">Gesamtstrecke</div><div style="font-family:var(--font-d);font-size:36px;font-weight:900;color:var(--teal)"><span id="p-total-km">0 km</span></div><div class="sub"><span id="p-runs-count">seit Anmeldung · 0 Läufe</span></div></div>
+          <div class="card card-y"><div class="lbl">Bester Monat</div><div style="font-family:var(--font-d);font-size:36px;font-weight:900;color:var(--yellow)"><span id="p-best-month">0 km</span></div><div class="sub">Noch kein Lauf</div></div>
+          <div class="card"><div class="lbl">Beste Pace</div><div style="font-family:var(--font-d);font-size:36px;font-weight:900">—</div><div class="sub">min/km · 5 km Lauf</div></div>
+          <div class="card"><div class="lbl">Zonen-Rekord</div><div style="font-family:var(--font-d);font-size:36px;font-weight:900;color:var(--purple)"><span id="p-zone-rec">0</span></div><div class="sub">gleichzeitig gehalten</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PRO PAGE ── -->
+    <div class="page" id="page-pro">
+      <div class="ph"><div class="ph-title">⚡ BlazRun PRO</div></div>
+      <div class="scroll">
+        <div class="pro-hero">
+          <div style="font-size:56px;margin-bottom:12px;display:block;animation:float 4s ease infinite">⚡</div>
+          <div class="pro-hero-title">Ignite Your Race.</div>
+          <div style="font-size:15px;color:var(--text2);margin-top:10px">Schalte dein volles Potenzial frei — keine Limits mehr</div>
+          <div class="pro-hero-price">8.99 CHF / Monat</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:6px">7 Tage gratis testen · Jederzeit kündbar · Sicher via Stripe</div>
+        </div>
+
+        <div class="plan-cards">
+          <div class="plan-card">
+            <div class="lbl">Free</div>
+            <div style="font-family:var(--font-d);font-size:44px;font-weight:900;color:var(--text2)">0 CHF</div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:16px">/Monat für immer</div>
+            <div class="plan-feat">3 Läufe/Woche tracken</div>
+            <div class="plan-feat">1 aktives Duell</div>
+            <div class="plan-feat">5 Zonen maximum</div>
+            <div class="plan-feat">Basis-Leaderboard</div>
+            <div class="plan-feat">Community Events sehen</div>
+            <button class="plan-cta" style="background:var(--bg3);color:var(--text2)">Aktueller Plan ✓</button>
+          </div>
+          <div class="plan-card featured">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div class="lbl" style="margin:0">PRO</div>
+              <div class="bdg bt" style="animation:glow 3s infinite">⭐ Empfohlen</div>
+            </div>
+            <div class="plan-price-big">8.99 CHF</div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:18px">/Monat · jederzeit kündbar</div>
+            <div class="plan-feat">✅ Unbegrenzt tracken & Zonen</div>
+            <div class="plan-feat">✅ Unbegrenzte Duelle</div>
+            <div class="plan-feat">✅ 🤖 KI-Laufcoach (Claude AI)</div>
+            <div class="plan-feat">✅ Boss Zonen & Geheimrouten</div>
+            <div class="plan-feat">✅ Clan erstellen & leiten</div>
+            <div class="plan-feat">✅ Exklusive PRO-Abzeichen</div>
+            <div class="plan-feat">✅ Detaillierte Statistiken</div>
+            <div class="plan-feat">✅ Keine Werbung</div>
+            <div class="plan-feat">✅ Früher Zugang zu neuen Features</div>
+            <button class="plan-cta">🔥 PRO starten — 7 Tage gratis</button>
+            <div style="text-align:center;font-size:11px;color:var(--text2);margin-top:8px">Danach 8.99 CHF/Monat · Sicher via Stripe</div>
+          </div>
+        </div>
+
+        <div class="sec">Was du mit PRO bekommst</div>
+        <div class="feature-showcase">
+          <div class="feat-box">
+            <span class="feat-icon" style="animation-delay:.2s">🗺️</span>
+            <div class="ttl">Unbegrenzte Zonen</div>
+            <div class="sub" style="margin-top:6px">Erobere ganze Städte in CH, DE & FR ohne Limits</div>
+          </div>
+          <div class="feat-box">
+            <span class="feat-icon" style="animation-delay:.4s">🤖</span>
+            <div class="ttl">KI-Laufcoach</div>
+            <div class="sub" style="margin-top:6px">Persönlicher Trainingsplan powered by Claude AI</div>
+          </div>
+          <div class="feat-box">
+            <span class="feat-icon" style="animation-delay:.6s">⚔️</span>
+            <div class="ttl">Clan-Chef</div>
+            <div class="sub" style="margin-top:6px">Erstelle & führe deinen eigenen Clan zum Sieg</div>
+          </div>
+          <div class="feat-box">
+            <span class="feat-icon" style="animation-delay:.2s">⚡</span>
+            <div class="ttl">Boss Zonen</div>
+            <div class="sub" style="margin-top:6px">Exklusive Zonen mit bis zu +800 XP Belohnung</div>
+          </div>
+          <div class="feat-box">
+            <span class="feat-icon" style="animation-delay:.4s">📊</span>
+            <div class="ttl">Detaillierte Stats</div>
+            <div class="sub" style="margin-top:6px">Pace-Analyse, Herzfrequenz, Fortschrittsgraphen</div>
+          </div>
+          <div class="feat-box">
+            <span class="feat-icon" style="animation-delay:.6s">🗝️</span>
+            <div class="ttl">Geheimrouten</div>
+            <div class="sub" style="margin-top:6px">Tägliche versteckte Routen mit Spezial-Belohnungen</div>
+          </div>
+        </div>
+
+        <div style="text-align:center;padding:32px;background:var(--bg2);border:1px solid var(--border);border-radius:18px;margin-top:20px">
+          <div style="font-size:32px;margin-bottom:12px">🏆</div>
+          <div style="font-family:var(--font-d);font-size:24px;font-weight:900;color:var(--yellow)">Bereit zu blazen?</div>
+          <div style="font-size:14px;color:var(--text2);margin:8px 0 20px">Schliess dich Tausenden von Läufern in CH, DE & FR an</div>
+          <button class="plan-cta" style="max-width:300px;display:inline-block">⚡ Jetzt PRO werden — 7 Tage gratis</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DATENSCHUTZ ── -->
+    <div class="page" id="page-datenschutz">
+      <div class="ph"><div><div class="ph-title">🔒 Datenschutz</div><div class="ph-sub">DSGVO-konform · CH · DE · FR</div></div><button class="btn-o" onclick="history.go(-1)||sp('profile')" style="padding:8px 14px;font-size:12px">← Zurück</button></div>
+      <div class="scroll"><div style="max-width:720px">
+        <div class="card" style="margin-bottom:14px">
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px"><div style="width:40px;height:40px;background:#00C2A820;border:1px solid #00C2A840;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🛡️</div><div><div style="font-size:15px;font-weight:600">Deine Daten sind sicher</div><div style="font-size:12px;color:var(--text2);margin-top:2px">BlazRun sammelt nur was nötig ist — nie mehr.</div></div></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;margin-bottom:4px">🔐</div><div style="font-size:12px;font-weight:500">SSL 256-bit</div></div>
+            <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;margin-bottom:4px">🇪🇺</div><div style="font-size:12px;font-weight:500">DSGVO</div></div>
+            <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;margin-bottom:4px">🗑️</div><div style="font-size:12px;font-weight:500">Löschbar</div></div>
+          </div>
+        </div>
+        <div class="sec">1. Verantwortlicher</div>
+        <div class="card" style="margin-bottom:14px"><div style="font-size:13px;color:var(--text2);line-height:1.8"><strong style="color:var(--text)">BlazRun</strong><br>[Adresse]<br>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1b7f7a6f7e756878736e6f615b79777a61696e75357a6b6b">[email&#160;protected]</a></div></div>
+        <div class="sec">2. Welche Daten wir sammeln</div>
+        <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+          <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px"><div style="width:8px;height:8px;background:var(--teal);border-radius:50%;margin-top:5px;flex-shrink:0"></div><div><div style="font-size:13px;font-weight:500">Registrierungsdaten</div><div style="font-size:11px;color:var(--text2)">Name, E-Mail, Stadt, Geschlecht — für dein Konto</div></div></div>
+          <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px"><div style="width:8px;height:8px;background:var(--teal);border-radius:50%;margin-top:5px;flex-shrink:0"></div><div><div style="font-size:13px;font-weight:500">GPS — nur während aktiver Läufe</div><div style="font-size:11px;color:var(--text2)">Nie im Hintergrund. Nie ohne deine Zustimmung.</div></div></div>
+          <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px"><div style="width:8px;height:8px;background:var(--teal);border-radius:50%;margin-top:5px;flex-shrink:0"></div><div><div style="font-size:13px;font-weight:500">Lauf-Statistiken</div><div style="font-size:11px;color:var(--text2)">Distanz, Tempo, Zonen — nur für dich sichtbar</div></div></div>
+          <div style="padding:11px 16px;display:flex;gap:10px"><div style="width:8px;height:8px;background:var(--red);border-radius:50%;margin-top:5px;flex-shrink:0"></div><div><div style="font-size:13px;font-weight:500;color:var(--red)">Was wir NICHT sammeln</div><div style="font-size:11px;color:var(--text2)">Kontakte, Kamera, Mikrofon, Werbedaten</div></div></div>
+        </div>
+        <div class="sec">3. Deine Rechte (DSGVO)</div>
+        <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+          <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">📋 Auskunft</div><div style="font-size:11px;color:var(--text2)">Alle Daten einsehen</div></div><button onclick="alert('E-Mail an datenschutz@blazrun.app')" style="background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer">Anfragen</button></div>
+          <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">📦 Export</div><div style="font-size:11px;color:var(--text2)">Daten herunterladen</div></div><button onclick="alert('Export wird per E-Mail zugestellt')" style="background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer">Exportieren</button></div>
+          <div style="padding:11px 16px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">🗑️ Löschen</div><div style="font-size:11px;color:var(--text2)">Konto & alle Daten löschen</div></div><button onclick="alert('Anfrage an datenschutz@blazrun.app')" style="background:var(--red-dim);color:var(--red);border:1px solid #ff555540;border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer">Löschen</button></div>
+        </div>
+        <div class="sec">4. Drittanbieter</div>
+        <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+          <div style="padding:11px 16px;border-bottom:1px solid var(--border)"><div style="font-size:13px;font-weight:500">Supabase</div><div style="font-size:11px;color:var(--text2)">Datenbank · EU-Server · supabase.com/privacy</div></div>
+          <div style="padding:11px 16px;border-bottom:1px solid var(--border)"><div style="font-size:13px;font-weight:500">Mapbox</div><div style="font-size:11px;color:var(--text2)">Karten · mapbox.com/legal/privacy</div></div>
+          <div style="padding:11px 16px;border-bottom:1px solid var(--border)"><div style="font-size:13px;font-weight:500">Stripe</div><div style="font-size:11px;color:var(--text2)">Zahlungen · PCI-DSS · stripe.com/privacy</div></div>
+          <div style="padding:11px 16px"><div style="font-size:13px;font-weight:500">Claude AI (Anthropic)</div><div style="font-size:11px;color:var(--text2)">KI-Coach · Chats nicht für Training · anthropic.com/privacy</div></div>
+        </div>
+        <div class="sec">5. Beschwerden</div>
+        <div class="card" style="margin-bottom:30px"><div style="font-size:13px;color:var(--text2);line-height:1.8">🇨🇭 EDÖB · edoeb.admin.ch<br>🇩🇪 BfDI · bfdi.bund.de<br>🇫🇷 CNIL · cnil.fr<br><br><span style="font-size:11px;color:var(--text3)">Stand: März 2026</span></div></div>
+      </div></div>
+    </div>
+
+    <!-- ── AGB ── -->
+    <div class="page" id="page-agb">
+      <div class="ph"><div><div class="ph-title">📋 AGB</div><div class="ph-sub">Allgemeine Geschäftsbedingungen · März 2026</div></div><button class="btn-o" onclick="sp('profile')" style="padding:8px 14px;font-size:12px">← Zurück</button></div>
+      <div class="scroll"><div style="max-width:720px">
+        <div class="card" style="margin-bottom:14px;background:var(--teal-dim);border-color:var(--teal-border)"><div style="font-size:13px;color:var(--text2)">Mit der Nutzung von BlazRun stimmst du diesen AGB zu. Fragen: <span style="color:var(--teal)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b2ded7d5d3def2d0ded3c8c0c7dc9cd3c2c2">[email&#160;protected]</a></span></div></div>
+        <div class="sec">§ 1 Registrierung</div>
+        <div class="card" style="margin-bottom:14px"><div style="font-size:13px;color:var(--text2);line-height:1.8">• Mindestalter: <strong style="color:var(--text)">16 Jahre</strong><br>• Pro Person nur ein Konto<br>• Wahrheitsgemässe Angaben erforderlich<br>• Konten bei Verstössen werden gesperrt</div></div>
+        <div class="sec">§ 2 PRO-Abonnement</div>
+        <div class="card" style="margin-bottom:14px"><div style="font-size:13px;color:var(--text2);line-height:1.8">• Preis: <strong style="color:var(--teal)">8.99 CHF/Monat</strong><br>• 7 Tage gratis testen<br>• Jederzeit kündbar — bis Periodenende aktiv<br>• Zahlung über Stripe (PCI-DSS zertifiziert)<br>• Preisänderungen 30 Tage im Voraus</div></div>
+        <div class="sec">§ 3 Nutzungsregeln</div>
+        <div class="card" style="margin-bottom:14px"><div style="font-size:13px;color:var(--text2);line-height:1.8"><strong style="color:var(--red)">Verboten:</strong><br>• GPS-Spoofing / Cheating<br>• Belästigung oder Mobbing anderer User<br>• Automatisierte Bots oder Scripts<br>• Kommerzielle Nutzung ohne Genehmigung</div></div>
+        <div class="sec">§ 4 Sicherheitshinweis</div>
+        <div class="card card-y" style="margin-bottom:14px"><div style="font-size:13px;color:var(--text2);line-height:1.8">⚠️ Du bist selbst verantwortlich für deine Sicherheit beim Laufen. Achte auf den Verkehr. BlazRun haftet nicht für Unfälle während der Nutzung.</div></div>
+        <div class="sec">§ 5 Kontakt</div>
+        <div class="card" style="margin-bottom:30px"><div style="font-size:13px;color:var(--text2);line-height:1.8">📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e9858c8e8885a98b8588939b9c87c7889999">[email&#160;protected]</a><br><span style="font-size:11px;color:var(--text3)">Stand: März 2026</span></div></div>
+      </div></div>
+    </div>
+
+    <!-- ── IMPRESSUM ── -->
+    <div class="page" id="page-impressum">
+      <div class="ph"><div><div class="ph-title">🏢 Impressum</div><div class="ph-sub">Pflichtangaben</div></div><button class="btn-o" onclick="sp('profile')" style="padding:8px 14px;font-size:12px">← Zurück</button></div>
+      <div class="scroll"><div style="max-width:720px">
+        <div class="card" style="margin-bottom:14px"><div class="sec" style="margin-top:0">Anbieter</div><div style="font-size:13px;color:var(--text2);line-height:2"><strong style="color:var(--text);font-size:15px">BlazRun</strong><br>[Vorname Nachname]<br>[Strasse Nr.]<br>[PLZ Ort, Land]</div></div>
+        <div class="card" style="margin-bottom:14px"><div class="sec" style="margin-top:0">Kontakt</div><div style="font-size:13px;color:var(--text2);line-height:2">📧 <span style="color:var(--teal)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="adc5c8c1c1c2edcfc1ccd7dfd8c383ccdddd">[email&#160;protected]</a></span><br>🌐 <span style="color:var(--teal)">www.blazrun.app</span><br>📱 <span style="color:var(--teal)">@blazrun</span></div></div>
+        <div class="card" style="margin-bottom:14px"><div class="sec" style="margin-top:0">Streitschlichtung</div><div style="font-size:13px;color:var(--text2);line-height:1.8">EU Online-Streitbeilegung: <span style="color:var(--teal)">ec.europa.eu/consumers/odr</span><br><br><span style="font-size:11px;color:var(--text3)">Stand: März 2026</span></div></div>
+      </div></div>
+    </div>
+
+    <!-- ── COOKIES ── -->
+    <div class="page" id="page-cookies">
+      <div class="ph"><div><div class="ph-title">🍪 Cookie-Richtlinie</div><div class="ph-sub">Transparenz über verwendete Technologien</div></div><button class="btn-o" onclick="sp('profile')" style="padding:8px 14px;font-size:12px">← Zurück</button></div>
+      <div class="scroll"><div style="max-width:720px">
+        <div class="card card-t" style="margin-bottom:14px"><div style="font-size:13px;color:var(--text2)"><strong style="color:var(--teal)">Keine Werbe-Cookies. Kein Tracking. Kein Facebook-Pixel.</strong> Nur das Nötigste.</div></div>
+        <div class="sec">Notwendige Cookies</div>
+        <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+          <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><div><div style="font-size:13px;font-weight:500">Session Token</div><div style="font-size:11px;color:var(--text2)">Hält dich eingeloggt · 30 Tage</div></div><div class="bdg bt">Notwendig</div></div>
+          <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><div><div style="font-size:13px;font-weight:500">Einstellungen</div><div style="font-size:11px;color:var(--text2)">Avatar, Sprache — lokal gespeichert</div></div><div class="bdg bt">Notwendig</div></div>
+          <div style="padding:11px 16px;display:flex;justify-content:space-between"><div><div style="font-size:13px;font-weight:500">Sicherheits-Token</div><div style="font-size:11px;color:var(--text2)">CSRF-Schutz</div></div><div class="bdg bt">Notwendig</div></div>
+        </div>
+        <div class="sec">Was wir NICHT nutzen</div>
+        <div class="card" style="margin-bottom:30px"><div style="font-size:13px;color:var(--text2);line-height:2"><span style="color:var(--red)">✕</span> Google Analytics<br><span style="color:var(--red)">✕</span> Facebook Pixel<br><span style="color:var(--red)">✕</span> Werbe-Cookies<br><span style="color:var(--red)">✕</span> Verkauf von Daten<br><br><span style="font-size:11px;color:var(--text3)">Stand: März 2026</span></div></div>
+      </div></div>
+    </div>
+
+    <!-- ══ ANLEITUNG ══ -->
+    <div class="page" id="page-guide">
+      <div class="ph">
+        <div><div class="ph-title">📖 Anleitung</div><div class="ph-sub">Alles was du wissen musst um loszulegen</div></div>
+        <button class="btn-t" onclick="sp('map')">🗺️ Karte öffnen</button>
+      </div>
+      <div class="scroll">
+
+        <!-- WILLKOMMEN HERO -->
+        <div style="background:linear-gradient(135deg,#0D1A18,#12122A);border:1px solid var(--teal-border);border-radius:18px;padding:32px;margin-bottom:24px;text-align:center;position:relative;overflow:hidden;">
+          <div style="position:absolute;inset:0;opacity:.04;font-size:200px;display:flex;align-items:center;justify-content:center;pointer-events:none">🔥</div>
+          <div style="font-family:var(--font-d);font-size:42px;font-weight:900;color:var(--teal);letter-spacing:-1px">Willkommen bei BlazRun!</div>
+          <div style="font-size:15px;color:var(--text2);margin-top:10px;max-width:500px;margin-left:auto;margin-right:auto;line-height:1.7">BlazRun ist die erste Lauf-App bei der du echte Stadtgebiete eroberst, Duelle gewinnst und gegen andere Läufer antritts. Diese Anleitung zeigt dir alles Schritt für Schritt.</div>
+          <div style="display:flex;justify-content:center;gap:16px;margin-top:20px;flex-wrap:wrap">
+            <div style="background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:12px;padding:12px 20px;text-align:center">
+              <div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--teal)">5 Min</div>
+              <div style="font-size:11px;color:var(--text2)">zum ersten Lauf</div>
+            </div>
+            <div style="background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:12px;padding:12px 20px;text-align:center">
+              <div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--teal)">100%</div>
+              <div style="font-size:11px;color:var(--text2)">kostenlos starten</div>
+            </div>
+            <div style="background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:12px;padding:12px 20px;text-align:center">
+              <div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--teal)">3 Länder</div>
+              <div style="font-size:11px;color:var(--text2)">CH · DE · FR</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCHNELLSTART -->
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--teal);margin-bottom:16px">⚡ Schnellstart — 3 Schritte</div>
+        <div class="g3" style="margin-bottom:28px">
+          <div class="card card-t" style="text-align:center;padding:24px">
+            <div style="width:56px;height:56px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px">1</div>
+            <div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--teal);margin-bottom:8px">Registrieren</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.6">Username wählen, Stadt eingeben, fertig. Kein Kreditkarte nötig!</div>
+          </div>
+          <div class="card card-t" style="text-align:center;padding:24px">
+            <div style="width:56px;height:56px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px">2</div>
+            <div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--teal);margin-bottom:8px">Karte öffnen</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.6">Sieh deine Stadt auf der Karte. Türkis = deine Zonen, Rot = Gegner.</div>
+          </div>
+          <div class="card card-t" style="text-align:center;padding:24px">
+            <div style="width:56px;height:56px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px">3</div>
+            <div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--teal);margin-bottom:8px">Lauf starten!</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.6">"Lauf starten" drücken, GPS aktivieren und losrennen. So einfach!</div>
+          </div>
+        </div>
+
+        <!-- KARTE ERKLÄRUNG -->
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--teal);margin-bottom:16px">🗺️ Die Karte verstehen</div>
+        <div class="card" style="margin-bottom:14px;padding:24px">
+          <div class="g2" style="gap:24px;align-items:center">
+            <div>
+              <!-- Mini Karte SVG -->
+              <svg width="100%" viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg" style="border-radius:12px;background:#0a0a18">
+                <!-- Strassen -->
+                <line x1="0" y1="50" x2="280" y2="50" stroke="#1e1e35" stroke-width="4"/>
+                <line x1="0" y1="100" x2="280" y2="100" stroke="#1e1e35" stroke-width="4"/>
+                <line x1="0" y1="150" x2="280" y2="150" stroke="#1e1e35" stroke-width="4"/>
+                <line x1="70" y1="0" x2="70" y2="200" stroke="#1e1e35" stroke-width="4"/>
+                <line x1="140" y1="0" x2="140" y2="200" stroke="#1e1e35" stroke-width="4"/>
+                <line x1="210" y1="0" x2="210" y2="200" stroke="#1e1e35" stroke-width="4"/>
+                <!-- Meine Zone -->
+                <rect x="4" y="4" width="62" height="42" rx="5" fill="#00C2A820" stroke="#00C2A8" stroke-width="1.5"/>
+                <text x="35" y="22" text-anchor="middle" fill="#00C2A8" font-size="9" font-weight="700" font-family="Barlow Condensed,sans-serif">DEINE</text>
+                <text x="35" y="34" text-anchor="middle" fill="#00C2A8" font-size="8" font-family="Barlow,sans-serif">+20 XP/Tag</text>
+                <rect x="74" y="4" width="62" height="42" rx="5" fill="#00C2A820" stroke="#00C2A8" stroke-width="1.5"/>
+                <text x="105" y="28" text-anchor="middle" fill="#00C2A8" font-size="9" font-weight="700" font-family="Barlow Condensed,sans-serif">DEINE</text>
+                <!-- Gegner Zone -->
+                <rect x="144" y="4" width="62" height="42" rx="5" fill="#ff555520" stroke="#ff5555" stroke-width="1.5"/>
+                <text x="175" y="22" text-anchor="middle" fill="#ff5555" font-size="9" font-weight="700" font-family="Barlow Condensed,sans-serif">GEGNER</text>
+                <text x="175" y="34" text-anchor="middle" fill="#ff5555" font-size="8" font-family="Barlow,sans-serif">⚔️ Angriff!</text>
+                <!-- Boss Zone -->
+                <rect x="214" y="4" width="62" height="42" rx="5" fill="#FFDD5720" stroke="#FFDD57" stroke-width="1.5" stroke-dasharray="5,3"/>
+                <text x="245" y="20" text-anchor="middle" fill="#FFDD57" font-size="8" font-weight="700" font-family="Barlow Condensed,sans-serif">⚡ BOSS</text>
+                <text x="245" y="32" text-anchor="middle" fill="#FFDD57" font-size="8" font-family="Barlow,sans-serif">+500 XP</text>
+                <!-- Clan Zone -->
+                <rect x="4" y="54" width="62" height="42" rx="5" fill="#9b5de520" stroke="#9b5de5" stroke-width="1.5"/>
+                <text x="35" y="78" text-anchor="middle" fill="#9b5de5" font-size="9" font-weight="700" font-family="Barlow Condensed,sans-serif">CLAN 🛡️</text>
+                <!-- Route -->
+                <polyline points="35,96 35,104 105,104 105,154 175,154" stroke="#00C2A8" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <!-- Player -->
+                <circle cx="175" cy="154" r="10" fill="#00C2A815"/>
+                <circle cx="175" cy="154" r="6" fill="#00C2A8" stroke="white" stroke-width="1.5"/>
+                <text x="175" y="157" text-anchor="middle" fill="white" font-size="6" font-weight="700" font-family="Barlow,sans-serif">Du</text>
+                <!-- Freund -->
+                <circle cx="105" cy="154" r="6" fill="#9b5de5" stroke="white" stroke-width="1.5"/>
+                <text x="105" y="157" text-anchor="middle" fill="white" font-size="6" font-weight="700" font-family="Barlow,sans-serif">A</text>
+                <!-- Legende Label -->
+                <text x="140" y="190" text-anchor="middle" fill="#444466" font-size="8" font-family="Barlow,sans-serif">Blaue Linie = deine Laufroute</text>
+              </svg>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;gap:12px;align-items:center">
+                <div style="width:36px;height:36px;background:var(--teal-dim);border:2px solid var(--teal);border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px">🏴</div>
+                <div><div style="font-size:14px;font-weight:600;color:var(--teal)">Türkis = Deine Zonen</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Gebiete die du bereits durch Laufen erobert hast. Sie geben dir täglich XP!</div></div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center">
+                <div style="width:36px;height:36px;background:var(--red-dim);border:2px solid var(--red);border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px">⚔️</div>
+                <div><div style="font-size:14px;font-weight:600;color:var(--red)">Rot = Gegner</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Zonen die anderen Läufern gehören. Laufe dort lang um sie zu erobern!</div></div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center">
+                <div style="width:36px;height:36px;background:var(--yellow-dim);border:2px dashed var(--yellow);border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px">⚡</div>
+                <div><div style="font-size:14px;font-weight:600;color:var(--yellow)">Gelb gestrichelt = Boss Zone</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Spezielle Herausforderung mit riesigem XP-Bonus (+500 XP!).</div></div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center">
+                <div style="width:36px;height:36px;background:var(--purple-dim);border:2px solid var(--purple);border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px">🛡️</div>
+                <div><div style="font-size:14px;font-weight:600;color:var(--purple)">Lila = Clan-Zone</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Gemeinsame Gebiete die du mit deinem Clan besitzt.</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ZONE EROBERN -->
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--teal);margin-bottom:16px">🏃 Wie du eine Zone eroberst</div>
+        <div class="card" style="margin-bottom:28px;padding:24px">
+          <div style="display:flex;flex-direction:column;gap:0">
+            <div style="display:flex;gap:16px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+              <div style="width:40px;height:40px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#003D35;flex-shrink:0">1</div>
+              <div>
+                <div style="font-size:15px;font-weight:600;margin-bottom:4px">Karte öffnen & Zone aussuchen</div>
+                <div style="font-size:13px;color:var(--text2);line-height:1.6">Tippe auf eine rote (Gegner) oder graue (neutrale) Zone auf der Karte. Du siehst wie viele XP du bekommst wenn du sie eroberst.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:16px;padding:20px 0;border-bottom:1px solid var(--border)">
+              <div style="width:40px;height:40px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#003D35;flex-shrink:0">2</div>
+              <div>
+                <div style="font-size:15px;font-weight:600;margin-bottom:4px">Lauf starten</div>
+                <div style="font-size:13px;color:var(--text2);line-height:1.6">Drücke den grünen "Lauf starten" Button. GPS wird aktiviert. Deine Route wird als leuchtende Linie auf der Karte angezeigt.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:16px;padding:20px 0;border-bottom:1px solid var(--border)">
+              <div style="width:40px;height:40px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#003D35;flex-shrink:0">3</div>
+              <div>
+                <div style="font-size:15px;font-weight:600;margin-bottom:4px">Durch die Zone laufen</div>
+                <div style="font-size:13px;color:var(--text2);line-height:1.6">Laufe durch das Gebiet. Der Fortschrittsbalken zeigt dir wie viel du noch laufen musst. Mehr gelaufene Fläche = mehr Fortschritt!</div>
+                <div style="background:var(--bg3);border-radius:8px;padding:10px;margin-top:10px">
+                  <div style="font-size:12px;color:var(--text2);margin-bottom:6px">Fortschritt</div>
+                  <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+                    <div style="height:100%;width:72%;background:var(--teal);border-radius:4px"></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-top:4px"><span>72% abgedeckt</span><span>+120 XP bei Erfolg</span></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:16px;padding-top:20px">
+              <div style="width:40px;height:40px;background:var(--yellow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#003D35;flex-shrink:0">🏆</div>
+              <div>
+                <div style="font-size:15px;font-weight:600;color:var(--yellow);margin-bottom:4px">Zone erobert!</div>
+                <div style="font-size:13px;color:var(--text2);line-height:1.6">Die Zone wird türkis — sie gehört jetzt dir! Du bekommst XP und die Zone bringt dir jeden Tag passive XP solange du sie hältst.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DUELLE -->
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--teal);margin-bottom:16px">⚔️ Duelle</div>
+        <div class="g2" style="margin-bottom:28px">
+          <div class="card">
+            <div style="font-size:32px;margin-bottom:12px">⚔️</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:8px">Was ist ein Duell?</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.7">Ein Duell ist ein direkter Wettkampf gegen einen anderen Läufer. Wer in einer Woche mehr Kilometer läuft oder mehr Zonen erobert, gewinnt — und bekommt XP als Belohnung.</div>
+          </div>
+          <div class="card">
+            <div style="font-size:32px;margin-bottom:12px">🎯</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:8px">Wie starte ich ein Duell?</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.7">Gehe zu "Duelle" → "+ Freund herausfordern" → Username eingeben → Duell-Typ wählen → Senden. Der andere muss annehmen und schon geht's los!</div>
+          </div>
+          <div class="card card-y">
+            <div style="font-size:32px;margin-bottom:12px">🏆</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:8px">Duell gewinnen</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.7">Mehr laufen als dein Gegner! Überprüfe täglich den Fortschrittsbalken. Du siehst wann dein Gegner läuft und kannst gezielt mehr laufen.</div>
+          </div>
+          <div class="card card-r">
+            <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:8px">Zone verlieren</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.7">Wenn ein Gegner durch deine Zone läuft, kannst du sie verlieren! Achte auf rote Warnungen und verteidige deine Gebiete.</div>
+          </div>
+        </div>
+
+        <!-- XP SYSTEM -->
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--teal);margin-bottom:16px">⚡ XP & Level System</div>
+        <div class="card" style="margin-bottom:28px;padding:24px">
+          <div class="g2" style="gap:20px;margin-bottom:20px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px">XP verdienen durch</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:13px">🏃 Laufen (pro km)</div><div class="bdg bt">+25 XP</div></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:13px">🏴 Zone erobern</div><div class="bdg bt">+120 XP</div></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:13px">⚡ Boss Zone</div><div class="bdg by">+500 XP</div></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:13px">⚔️ Duell gewinnen</div><div class="bdg bt">+300 XP</div></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:13px">🏴 Zone halten (täglich)</div><div class="bdg bt">+15–20 XP</div></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0"><div style="font-size:13px">🔥 Streak (täglich laufen)</div><div class="bdg by">+Bonus</div></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px">Level Übersicht</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="background:var(--bg3);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between"><div style="font-size:13px;font-weight:600">🌱 Level 1–5</div><div style="font-size:12px;color:var(--text2)">Newcomer · 0–500 XP</div></div>
+                <div style="background:var(--bg3);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between"><div style="font-size:13px;font-weight:600">🏃 Level 6–10</div><div style="font-size:12px;color:var(--text2)">Runner · 500–2.000 XP</div></div>
+                <div style="background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between"><div style="font-size:13px;font-weight:600;color:var(--teal)">⚡ Level 11–20</div><div style="font-size:12px;color:var(--text2)">Blazer · 2k–10k XP</div></div>
+                <div style="background:var(--yellow-dim);border:1px solid #FFDD5730;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between"><div style="font-size:13px;font-weight:600;color:var(--yellow)">👑 Level 21+</div><div style="font-size:12px;color:var(--text2)">Elite · 10k+ XP</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KI COACH -->
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--teal);margin-bottom:16px">🤖 KI-Coach</div>
+        <div class="card card-t" style="margin-bottom:28px;padding:24px">
+          <div class="g2" style="gap:20px;align-items:center">
+            <div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:10px">Dein persönlicher Lauf-Coach powered by Claude AI</div>
+              <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px">Der KI-Coach analysiert deine Läufe und gibt dir personalisierte Tipps. Du kannst ihm alles fragen — von Trainingsplanung bis Verletzungsvorbeugung.</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;gap:8px;align-items:center"><div style="color:var(--teal);font-size:16px">✓</div><div style="font-size:13px;color:var(--text2)">Wöchentliche Trainingspläne</div></div>
+                <div style="display:flex;gap:8px;align-items:center"><div style="color:var(--teal);font-size:16px">✓</div><div style="font-size:13px;color:var(--text2)">Duell-Strategie & Tipps</div></div>
+                <div style="display:flex;gap:8px;align-items:center"><div style="color:var(--teal);font-size:16px">✓</div><div style="font-size:13px;color:var(--text2)">Verletzungsschutz & Regeneration</div></div>
+                <div style="display:flex;gap:8px;align-items:center"><div style="color:var(--teal);font-size:16px">✓</div><div style="font-size:13px;color:var(--text2)">Ernährungs- & Hydrationstipps</div></div>
+              </div>
+              <div class="bdg by" style="margin-top:14px;display:inline-block">⚡ PRO Feature</div>
+            </div>
+            <!-- Chat Preview -->
+            <div style="background:var(--bg);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px">
+              <div style="background:#0D1A18;border:1px solid var(--teal-border);border-radius:14px;padding:12px;max-width:220px">
+                <div style="font-size:10px;color:var(--teal);margin-bottom:4px;font-weight:600">KI-COACH</div>
+                <div style="font-size:12px;color:#ccc;line-height:1.5">Hey! Diese Woche 18 km — stark! Ich empfehle morgen einen lockeren 5 km Erholungslauf. 💪</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:12px;max-width:200px;align-self:flex-end">
+                <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600">DU</div>
+                <div style="font-size:12px;color:#ccc">Wie kann ich mehr Zonen conquern?</div>
+              </div>
+              <div style="background:#0D1A18;border:1px solid var(--teal-border);border-radius:14px;padding:12px;max-width:220px">
+                <div style="font-size:10px;color:var(--teal);margin-bottom:4px;font-weight:600">KI-COACH</div>
+                <div style="font-size:12px;color:#ccc;line-height:1.5">Laufe morgen früh 3 km — während er schläft! Dann Boss Zone angreifen für +500 XP Extra ⚡</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMMUNITY & CLANS -->
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--teal);margin-bottom:16px">👥 Community & Clans</div>
+        <div class="g2" style="margin-bottom:28px">
+          <div class="card">
+            <div style="font-size:32px;margin-bottom:10px">👥</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:8px">Einem Clan beitreten</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:12px">Clans sind Gruppen von Läufern die gemeinsam Zonen erobern und Städte dominieren. Gehe zu Community → Clans um einem beizutreten.</div>
+            <div style="background:var(--bg3);border-radius:10px;padding:12px">
+              <div style="display:flex;align-items:center;gap:10px"><div style="font-size:22px">🔥</div><div><div style="font-size:13px;font-weight:600">BlazCrew Zürich</div><div style="font-size:11px;color:var(--text2)">Rang #1 CH</div></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:32px;margin-bottom:10px">🌍</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:8px">Events & Challenges</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.7">Nimm an Community Events teil — gemeinsame Läufe, Stadt-Kriege (Zürich vs Bern), oder die monatliche Challenge zwischen CH 🇨🇭, DE 🇩🇪 und FR 🇫🇷.</div>
+          </div>
+        </div>
+
+        <!-- TIPS -->
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--teal);margin-bottom:16px">💡 Profi-Tipps</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;gap:12px;align-items:flex-start">
+            <div style="font-size:22px;flex-shrink:0">🌅</div>
+            <div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Früh morgens laufen</div><div style="font-size:13px;color:var(--text2)">Morgens laufen während Gegner schlafen ist die beste Strategie um Zonen zu sichern und Duelle zu gewinnen!</div></div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;gap:12px;align-items:flex-start">
+            <div style="font-size:22px;flex-shrink:0">🗺️</div>
+            <div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Strategisch Zonen wählen</div><div style="font-size:13px;color:var(--text2)">Wähle Zonen die nahe beieinander liegen — so kannst du auf einem Lauf mehrere Gebiete auf einmal abdecken.</div></div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;gap:12px;align-items:flex-start">
+            <div style="font-size:22px;flex-shrink:0">🔥</div>
+            <div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Streak nicht brechen!</div><div style="font-size:13px;color:var(--text2)">Laufe jeden Tag mindestens 1 km um deinen Streak zu halten. Längere Streaks geben Bonus-XP!</div></div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;gap:12px;align-items:flex-start">
+            <div style="font-size:22px;flex-shrink:0">⚡</div>
+            <div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Boss Zonen zuerst!</div><div style="font-size:13px;color:var(--text2)">Boss Zonen geben +500 XP auf einmal. Plane deinen Lauf so dass du durch eine Boss Zone läufst.</div></div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;gap:12px;align-items:flex-start">
+            <div style="font-size:22px;flex-shrink:0">👥</div>
+            <div><div style="font-size:14px;font-weight:600;margin-bottom:3px">Mit Freunden laufen</div><div style="font-size:13px;color:var(--text2)">Team-Läufe geben +20% XP Bonus für alle Teilnehmer! Koordiniere dich mit Clan-Mitgliedern.</div></div>
+          </div>
+        </div>
+
+        <!-- FAQ -->
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--teal);margin-bottom:16px">❓ Häufige Fragen</div>
+        <div id="faq-wrap" style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px">
+          <div class="card" style="cursor:pointer" onclick="toggleFaq(this)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:14px;font-weight:600">Wie aktiviere ich GPS?</div>
+              <div class="faq-arrow" style="color:var(--teal);font-size:18px;transition:transform .2s">▾</div>
+            </div>
+            <div class="faq-body" style="display:none;font-size:13px;color:var(--text2);margin-top:10px;line-height:1.7">iPhone: Einstellungen → Safari/Chrome → Standort → Erlauben. Android: Browser-Einstellungen → Standort → Erlauben. Dann nochmals auf "Lauf starten" tippen.</div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="toggleFaq(this)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:14px;font-weight:600">Warum verliere ich eine Zone?</div>
+              <div class="faq-arrow" style="color:var(--teal);font-size:18px;transition:transform .2s">▾</div>
+            </div>
+            <div class="faq-body" style="display:none;font-size:13px;color:var(--text2);margin-top:10px;line-height:1.7">Ein Gegner ist durch deine Zone gelaufen und hat genug Fläche abgedeckt. Du siehst eine rote ⚠️ Warnung wenn deine Zone bedroht ist. Laufe schnell durch die Zone um sie zu verteidigen!</div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="toggleFaq(this)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:14px;font-weight:600">Was kostet PRO?</div>
+              <div class="faq-arrow" style="color:var(--teal);font-size:18px;transition:transform .2s">▾</div>
+            </div>
+            <div class="faq-body" style="display:none;font-size:13px;color:var(--text2);margin-top:10px;line-height:1.7">BlazRun PRO kostet 8.99 CHF/Monat. Du bekommst 7 Tage gratis zum Testen — keine Kreditkarte nötig für die Testphase. Kündigung jederzeit möglich.</div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="toggleFaq(this)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:14px;font-weight:600">Kann ich BlazRun als App installieren?</div>
+              <div class="faq-arrow" style="color:var(--teal);font-size:18px;transition:transform .2s">▾</div>
+            </div>
+            <div class="faq-body" style="display:none;font-size:13px;color:var(--text2);margin-top:10px;line-height:1.7">Ja! iPhone: blazrun.app in Safari öffnen → Teilen-Button → "Zum Home-Bildschirm". Android: blazrun.app in Chrome → 3 Punkte → "App installieren". BlazRun erscheint dann wie eine echte App auf deinem Homescreen!</div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="toggleFaq(this)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:14px;font-weight:600">In welchen Städten ist BlazRun verfügbar?</div>
+              <div class="faq-arrow" style="color:var(--teal);font-size:18px;transition:transform .2s">▾</div>
+            </div>
+            <div class="faq-body" style="display:none;font-size:13px;color:var(--text2);margin-top:10px;line-height:1.7">BlazRun funktioniert in allen Städten in der Schweiz 🇨🇭, Deutschland 🇩🇪 und Frankreich 🇫🇷. Weitere Länder folgen bald!</div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div style="background:linear-gradient(135deg,#0D1A18,#12122A);border:1px solid var(--teal-border);border-radius:18px;padding:32px;text-align:center;margin-bottom:24px">
+          <div style="font-family:var(--font-d);font-size:32px;font-weight:900;color:var(--teal);margin-bottom:10px">Bereit zu blazen? 🔥</div>
+          <div style="font-size:14px;color:var(--text2);margin-bottom:20px">Öffne die Karte und starte deinen ersten Lauf!</div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button class="btn-t" style="padding:13px 28px;font-size:15px" onclick="sp('map')">🗺️ Karte öffnen</button>
+            <button class="btn-o" style="padding:13px 28px;font-size:15px" onclick="sp('pro')">⚡ PRO entdecken</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bnav">
+      <div class="bnavs">
+        <div class="bni active" onclick="sp('map')"><div class="bni-ic">🗺️</div><div class="bni-lb">Karte</div></div>
+        <div class="bni" onclick="sp('duels')"><div class="bni-ic">⚔️</div><div class="bni-lb">Duelle</div></div>
+        <div class="bni" onclick="sp('leaderboard')"><div class="bni-ic">🏆</div><div class="bni-lb">Ranking</div></div>
+        <div class="bni" onclick="sp('community')"><div class="bni-ic">👥</div><div class="bni-lb">Community</div></div>
+        <div class="bni" onclick="sp('profile')"><div class="bni-ic">👤</div><div class="bni-lb">Profil</div></div>
+      </div>
+      <!-- Mobile Legal Footer -->
+      <div style="display:flex;justify-content:center;gap:12px;padding:6px 0 2px;flex-wrap:wrap">
+        <span onclick="sp('datenschutz')" style="font-size:10px;color:var(--text3);cursor:pointer">Datenschutz</span>
+        <span style="font-size:10px;color:var(--text3)">·</span>
+        <span onclick="sp('agb')" style="font-size:10px;color:var(--text3);cursor:pointer">AGB</span>
+        <span style="font-size:10px;color:var(--text3)">·</span>
+        <span onclick="sp('impressum')" style="font-size:10px;color:var(--text3);cursor:pointer">Impressum</span>
+        <span style="font-size:10px;color:var(--text3)">·</span>
+        <span onclick="sp('cookies')" style="font-size:10px;color:var(--text3);cursor:pointer">Cookies</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const pageNav={map:0,run:0,duels:1,leaderboard:2,coach:3,community:4,zones:5,profile:6,pro:7,guide:8,datenschutz:6,agb:6,impressum:6,cookies:6};
+const mobileNav={map:0,run:0,duels:1,leaderboard:2,community:3,profile:4,guide:4,datenschutz:4,agb:4,impressum:4,cookies:4};
+
+function toggleFaq(el){
+  const body = el.querySelector('.faq-body');
+  const arrow = el.querySelector('.faq-arrow');
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  arrow.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+let analyticsOn = false;
+function toggleAnalytics(){
+  analyticsOn = !analyticsOn;
+  document.getElementById('analytics-toggle').style.background = analyticsOn ? '#00C2A8' : 'var(--border)';
+  document.getElementById('analytics-dot').style.transform = analyticsOn ? 'translateX(18px)' : 'translateX(0)';
+}
+
+// Avatar SVGs
+const AVATARS = {
+  1: `<svg width="100%" height="100%" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><circle cx="52" cy="14" r="7" fill="#00C2A8"/><path d="M46 10 Q52 6 58 10 Q58 7 52 6 Q46 7 46 10Z" fill="#009880"/><path d="M38 28 Q40 22 48 22 Q54 22 56 26 L52 42 L44 40 Z" fill="#00C2A8"/><path d="M44 28 Q36 32 30 26" stroke="#00C2A8" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M52 30 Q60 34 64 30" stroke="#00C2A8" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M44 40 L52 42 L54 52 L46 52 Z" fill="#009880"/><path d="M46 52 Q42 60 34 62" stroke="#00D4B8" stroke-width="5" stroke-linecap="round" fill="none"/><ellipse cx="32" cy="64" rx="6" ry="3" fill="#FFDD57"/><path d="M50 52 Q56 58 58 66" stroke="#00D4B8" stroke-width="5" stroke-linecap="round" fill="none"/><ellipse cx="60" cy="68" rx="6" ry="3" fill="#FFDD57"/><line x1="14" y1="30" x2="22" y2="30" stroke="#00C2A8" stroke-width="1.5" opacity=".5"/><line x1="10" y1="38" x2="20" y2="38" stroke="#00C2A8" stroke-width="1.5" opacity=".3"/></svg>`,
+  2: `<svg width="100%" height="100%" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M20 30 L14 20 L26 16 Q30 24 40 24 Q50 24 54 16 L66 20 L60 30 L56 28 L56 66 L24 66 L24 28 Z" fill="#00C2A8"/><path d="M14 20 L20 30 L24 28 L24 22 Z" fill="#009880"/><path d="M66 20 L60 30 L56 28 L56 22 Z" fill="#009880"/><rect x="28" y="36" width="24" height="16" rx="4" fill="#FFDD57"/><path d="M32 48 L35 38 L38 44 L40 41 L44 46" stroke="#003D35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><text x="40" y="56" text-anchor="middle" fill="#FFDD57" font-size="5" font-weight="700" font-family="Barlow Condensed,sans-serif">BLAZRUN</text></svg>`,
+  3: `<svg width="100%" height="100%" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="32" y="8" width="16" height="7" rx="3" fill="#007a68"/><rect x="30" y="14" width="20" height="8" rx="3" fill="#009880"/><rect x="24" y="22" width="32" height="48" rx="10" fill="#00C2A8"/><rect x="27" y="24" width="7" height="44" rx="4" fill="#00D4B8" opacity=".4"/><rect x="26" y="34" width="28" height="20" rx="3" fill="#FFDD57"/><path d="M33 50 L33 38 L40 44 L47 38 L47 50" stroke="#003D35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><text x="40" y="58" text-anchor="middle" fill="#FFDD57" font-size="5.5" font-weight="700" font-family="Barlow Condensed,sans-serif">BLAZRUN</text><path d="M56 28 Q64 28 64 38 Q64 48 56 48" fill="none" stroke="#009880" stroke-width="3" stroke-linecap="round"/></svg>`
+};
+
+let currentAvatar = null; // null = zeigt Initialen
+let customPhotoData = null;
+
+let selectedGender = null;
+
+function selectGender(g){
+  selectedGender = g;
+  const male = document.getElementById('gender-male');
+  const female = document.getElementById('gender-female');
+  if(g === 'male'){
+    male.style.border = '2px solid #00C2A8';
+    male.style.background = '#00C2A815';
+    male.style.color = '#00C2A8';
+    female.style.border = '2px solid #1e1e35';
+    female.style.background = 'var(--bg3)';
+    female.style.color = 'var(--text2)';
+  } else {
+    female.style.border = '2px solid #00C2A8';
+    female.style.background = '#00C2A815';
+    female.style.color = '#00C2A8';
+    male.style.border = '2px solid #1e1e35';
+    male.style.background = 'var(--bg3)';
+    male.style.color = 'var(--text2)';
+  }
+}
+
+function enterApp(){
+  const regName = document.getElementById('reg-username')?.value?.trim();
+  const regCity = document.getElementById('reg-city')?.value?.trim();
+  const displayName = regName || 'BlazRunner';
+  const displayCity = regCity || 'Zürich';
+
+  // Session speichern — damit man nicht immer neu einloggen muss
+  localStorage.setItem('blazrun_session', JSON.stringify({
+    name: displayName,
+    city: displayCity,
+    gender: selectedGender,
+    avatar: currentAvatar,
+    loggedIn: true,
+    loginTime: Date.now()
+  }));
+
+  loadUserIntoApp(displayName, displayCity, selectedGender, currentAvatar);
+}
+
+async function loadUserIntoApp(displayName, displayCity, gender, avatar){
+  // Load real data from Supabase first
+  if(sb){
+    try {
+      const {data:{user}} = await sb.auth.getUser();
+      if(user){
+        const {data:p} = await sb.from('profiles').select('*').eq('id',user.id).single();
+        if(p){
+          displayName = p.username || displayName;
+          displayCity = p.city || displayCity;
+          gender = p.gender || gender;
+          // Update all stats with real data
+          const xp=p.xp||0, km=p.total_km||0, level=p.level||1, streak=p.streak||0;
+          const pct=Math.min(100,(xp%(level*1000))/(level*10));
+          const se=id=>document.getElementById(id);
+          if(se('p-xp')) se('p-xp').textContent=xp.toLocaleString();
+          if(se('p-km')) se('p-km').textContent=km.toFixed(1);
+          if(se('p-level')) se('p-level').textContent=level;
+          if(se('p-xp-label')) se('p-xp-label').textContent=`${xp} / ${level*1000} XP`;
+          if(se('p-xp-next')) se('p-xp-next').textContent=`Level ${level+1} → ${(level*1000)-xp} XP noch`;
+          if(se('p-xp-fill')) se('p-xp-fill').style.width=pct+'%';
+          if(se('p-total-km')) se('p-total-km').textContent=km.toFixed(1)+' km';
+          if(se('sb-level')) se('sb-level').textContent=level;
+          if(se('sb-xp')) se('sb-xp').textContent=xp;
+          if(se('sb-xp-fill')) se('sb-xp-fill').style.width=pct+'%';
+          if(streak>0){ if(se('p-streak-badge')) se('p-streak-badge').style.display='inline-flex'; if(se('p-streak-num')) se('p-streak-num').textContent=streak; if(se('p-streak-big')) se('p-streak-big').textContent=streak; if(se('p-streak-title')) se('p-streak-title').textContent='Burn weiter!'; }
+          const {count:zc}=await sb.from('territories').select('*',{count:'exact',head:true}).eq('user_id',user.id);
+          if(se('p-zones')) se('p-zones').textContent=zc||0;
+          if(se('map-zone-count')) se('map-zone-count').textContent=zc||0;
+          if(se('map-xp-count')) se('map-xp-count').textContent=xp;
+          if((zc||0)>0){ if(se('badge-gebietsherr')) se('badge-gebietsherr').className='badgeit b-earn'; }
+          const {count:dc}=await sb.from('duels').select('*',{count:'exact',head:true}).or(`challenger_id.eq.${user.id},opponent_id.eq.${user.id}`);
+          if(se('p-duels')) se('p-duels').textContent=dc||0;
+          const {count:rc}=await sb.from('runs').select('*',{count:'exact',head:true}).eq('user_id',user.id);
+          if(se('p-runs-count')) se('p-runs-count').textContent=`seit Anmeldung · ${rc||0} Läufe`;
+        }
+      }
+    } catch(e){}
+  }
+  // Profil aktualisieren
+  document.getElementById('profile-username').textContent = displayName;
+  document.getElementById('profile-meta').textContent = `Level 1 · Runner · ${displayCity} 🏃`;
+
+  // Geschlecht Badge
+  const genderBadge = document.getElementById('profile-gender-badge');
+  if(gender === 'male'){
+    genderBadge.style.display = 'block';
+    genderBadge.textContent = '👨 Mann';
+  } else if(gender === 'female'){
+    genderBadge.style.display = 'block';
+    genderBadge.textContent = '👩 Frau';
+  }
+
+  // Sidebar Name
+  const sidebarName = document.querySelector('.user-name');
+  if(sidebarName) sidebarName.textContent = displayName;
+
+  // Avatar wiederherstellen
+  if(avatar){
+    currentAvatar = avatar;
+    updateAllAvatars();
+  }
+
+  document.getElementById('login-page').classList.remove('active');
+  document.getElementById('main-app').style.display = 'flex';
+  setTimeout(()=>{ sp('profile'); }, 10);
+}
+
+function logout(){
+  localStorage.removeItem('blazrun_session');
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('login-page').classList.add('active');
+}
+
+// Beim Start prüfen ob Session existiert
+
+// ═══ LANGUAGE SYSTEM ═══
+const LANGS = {
+  de: {
+    login: 'Anmelden', register: 'Registrieren', submit_login: '🔥 Los laufen!',
+    submit_register: '⚡ Account erstellen', email: 'E-Mail', password: 'Passwort',
+    username: 'Username', city: 'Stadt', city_ph: 'Zürich, Berlin, Paris...',
+    iam: 'Ich bin', male: '👨 Mann', female: '👩 Frau',
+    google: 'Mit Google anmelden', or: 'oder',
+    tagline: 'Ignite your race. Conquer your city. 🔥',
+    footer_agb: 'AGB', footer_ds: 'Datenschutzrichtlinie',
+    footer_text: 'Durch die Anmeldung stimmst du unseren %agb% und der %ds% zu.',
+    pass_placeholder: '••••••••', pass_min: 'mind. 6 Zeichen',
+    email_ph: 'deine@email.com', user_ph: 'BlazRunner_Max'
+  },
+  en: {
+    login: 'Sign In', register: 'Register', submit_login: '🔥 Let\'s run!',
+    submit_register: '⚡ Create account', email: 'Email', password: 'Password',
+    username: 'Username', city: 'City', city_ph: 'Zurich, Berlin, Paris...',
+    iam: 'I am', male: '👨 Male', female: '👩 Female',
+    google: 'Sign in with Google', or: 'or',
+    tagline: 'Ignite your race. Conquer your city. 🔥',
+    footer_agb: 'Terms', footer_ds: 'Privacy Policy',
+    footer_text: 'By signing up you agree to our %agb% and %ds%.',
+    pass_placeholder: '••••••••', pass_min: 'min. 6 characters',
+    email_ph: 'your@email.com', user_ph: 'BlazRunner_Max'
+  },
+  fr: {
+    login: "Se connecter", register: "S’inscrire", submit_login: "🔥 On court!",
+    submit_register: "⚡ Créer un compte", email: "E-mail", password: "Mot de passe",
+    username: "Pseudo", city: "Ville", city_ph: "Zurich, Berlin, Paris...",
+    iam: "Je suis", male: "👨 Homme", female: "👩 Femme",
+    google: "Continuer avec Google", or: "ou",
+    tagline: "Ignite your race. Conquer your city. 🔥",
+    footer_agb: "CGU", footer_ds: "Politique de confidentialité",
+    footer_text: "En vous inscrivant, vous acceptez nos %agb% et notre %ds%.",
+    pass_placeholder: "••••••••", pass_min: "min. 6 caractères",
+    email_ph: "votre@email.com", user_ph: "BlazRunner_Max"
+  }
+};
+let currentLang = localStorage.getItem('blazrun_lang') || 'de';
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('blazrun_lang', lang);
+  // Update lang buttons
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  const map = {de:0,en:1,fr:2};
+  const btns = document.querySelectorAll('.lang-btn');
+  if(btns[map[lang]]) btns[map[lang]].classList.add('active');
+  // Apply translations
+  applyLang();
+}
+
+function applyLang() {
+  const t = LANGS[currentLang] || LANGS.de;
+  const s = id => document.getElementById(id);
+  // Tabs
+  const tabs = document.querySelectorAll('.ltab');
+  if(tabs[0]) tabs[0].textContent = t.login;
+  if(tabs[1]) tabs[1].textContent = t.register;
+  // Login form
+  const loginLabel = document.querySelector('#login-form .form-label');
+  if(loginLabel) loginLabel.textContent = t.email;
+  const loginLabels = document.querySelectorAll('#login-form .form-label');
+  if(loginLabels[0]) loginLabels[0].textContent = t.email;
+  if(loginLabels[1]) loginLabels[1].textContent = t.password;
+  const loginEmail = document.querySelector('#login-form input[type="email"]');
+  if(loginEmail) loginEmail.placeholder = t.email_ph;
+  const loginPass = document.querySelector('#login-form input[type="password"]');
+  if(loginPass) loginPass.placeholder = t.pass_placeholder;
+  const loginBtn = document.querySelector('#login-form .form-submit');
+  if(loginBtn) loginBtn.textContent = t.submit_login;
+  const googleBtn = document.querySelector('#login-form .social-btn span') ||
+                    document.querySelector('#login-form .social-btn');
+  if(googleBtn && googleBtn.tagName !== 'DIV') googleBtn.textContent = t.google;
+  const dividers = document.querySelectorAll('.form-divider');
+  dividers.forEach(d => d.textContent = t.or);
+  // Register form
+  const regLabels = document.querySelectorAll('#register-form .form-label');
+  const regLabelTexts = [t.username, t.email, t.city, t.iam, t.password];
+  regLabels.forEach((lb, i) => { if(regLabelTexts[i]) lb.textContent = regLabelTexts[i]; });
+  const regUser = s('reg-username'); if(regUser) regUser.placeholder = t.user_ph;
+  const regEmail = s('reg-email'); if(regEmail) regEmail.placeholder = t.email_ph;
+  const regCity = s('reg-city'); if(regCity) regCity.placeholder = t.city_ph;
+  const regPass = s('reg-pass'); if(regPass) regPass.placeholder = t.pass_min;
+  const regBtn = document.querySelector('#register-form .form-submit');
+  if(regBtn) regBtn.textContent = t.submit_register;
+  const maleBtn = s('gender-male'); if(maleBtn) maleBtn.textContent = t.male;
+  const femaleBtn = s('gender-female'); if(femaleBtn) femaleBtn.textContent = t.female;
+  // Tagline
+  const tagline = document.querySelector('.login-tagline');
+  if(tagline) tagline.textContent = t.tagline;
+  // Google button text
+  const gBtn = document.querySelector('#login-form .social-btn');
+  if(gBtn) {
+    const txt = gBtn.querySelector('span') || gBtn.childNodes[gBtn.childNodes.length-1];
+    if(txt && txt.nodeType === 3) txt.textContent = ' ' + t.google;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  try {
+    const raw = localStorage.getItem('blazrun_session');
+    if(raw){
+      const session = JSON.parse(raw);
+      if(session && session.loggedIn && session.name){
+        selectedGender = session.gender || null;
+        loadUserIntoApp(session.name, session.city || 'Zürich', session.gender, session.avatar);
+        return;
+      }
+    }
+  } catch(e){}
+  // Kein Session — Login zeigen
+  document.getElementById('login-page').classList.add('active');
+});
+
+function openAvatarPicker(){
+  document.getElementById('avatar-picker-overlay').style.display='flex';
+}
+
+function closeAvatarPicker(){
+  document.getElementById('avatar-picker-overlay').style.display='none';
+}
+
+function pickAvatar(n){
+  currentAvatar = n;
+  customPhotoData = null;
+  // Update alle Avatar-Anzeigen
+  updateAllAvatars();
+  // Highlight gewählter Avatar
+  document.querySelectorAll('.apick').forEach((a,i)=>{
+    a.style.border = (i+1===n) ? '2px solid #00C2A8' : '2px solid #1e1e35';
+    a.style.background = (i+1===n) ? '#00C2A810' : '#12122A';
+  });
+}
+
+function pickPhoto(input){
+  if(!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    customPhotoData = e.target.result;
+    currentAvatar = null;
+    updateAllAvatars();
+    document.querySelectorAll('.apick').forEach(a=>{
+      a.style.border='2px solid #1e1e35';
+      a.style.background='#12122A';
+    });
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function updateAllAvatars(){
+  const targets = document.querySelectorAll('.dyn-avatar');
+  targets.forEach(el => {
+    if(customPhotoData){
+      el.innerHTML=`<img src="${customPhotoData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+    } else if(currentAvatar){
+      el.innerHTML = AVATARS[currentAvatar];
+      el.style.padding = '4px';
+    } else {
+      el.innerHTML = 'B';
+      el.style.padding = '0';
+    }
+  });
+}
+
+function saveAvatarChoice(){
+  closeAvatarPicker();
+  updateAllAvatars();
+}
+
+function sp(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.bni').forEach(n=>n.classList.remove('active'));
+  const p=document.getElementById('page-'+name);
+  if(p)p.classList.add('active');
+  // Find nav item by onclick content
+  document.querySelectorAll('.ni').forEach(n=>{
+    if(n.getAttribute('onclick')===`sp('${name}')`) n.classList.add('active');
+  });
+  document.querySelectorAll('.bni').forEach(n=>{
+    if(n.getAttribute('onclick')===`sp('${name}')`) n.classList.add('active');
+  });
+  if(name==='map') setTimeout(initBlazMap, 150);
+}
+
+function switchLoginTab(tab){
+  document.querySelectorAll('.ltab').forEach((t,i)=>t.classList.toggle('active',['login','register'][i]===tab));
+  document.getElementById('login-form').style.display=tab==='login'?'block':'none';
+  document.getElementById('register-form').style.display=tab==='register'?'block':'none';
+}
+
+function switchMapTab(name){
+  document.querySelectorAll('.mbtab').forEach((t,i)=>t.classList.toggle('active',['overview','zones','friends'][i]===name));
+  document.querySelectorAll('.map-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('mp-'+name).classList.add('active');
+}
+
+document.querySelectorAll('.lbfb').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.lbfb').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Staggered animation for lb rows
+document.querySelectorAll('.lbr').forEach((row,i)=>{
+  row.style.animationDelay=i*0.05+'s';
+  row.style.animation='fadein .3s ease '+i*0.05+'s both';
+});
+
+// ═══ CANVAS KARTE ENGINE ═══
+// ═══ MAPBOX LIVE MAP ═══
+let blazMap = null;
+let playerMarker = null;
+let routePoints = [];
+let runMapReady = false;
+
+
+// ═══ CANVAS FALLBACK (wenn Mapbox blockiert ist z.B. in Vorschau) ═══
+function initCanvasFallback(){
+  const wrap = document.getElementById('mapbox-container');
+  if(!wrap) return;
+  // Check if already initialized
+  if(document.getElementById('blazCanvas')) return;
+  const blazmap = document.getElementById('blazmap');
+  const cv = document.createElement('canvas');
+  cv.id = 'blazCanvas';
+  cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;cursor:grab;';
+  if(blazmap) blazmap.replaceWith(cv);
+  else wrap.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  let cLat=47.3769, cLng=8.5400, zoom=12.8, drag=false, ds=null, dc=null;
+
+  function resize(){ cv.width=wrap.offsetWidth; cv.height=wrap.offsetHeight; draw(); }
+
+  function proj(lat,lng){
+    const sc=256*Math.pow(2,zoom);
+    const x=(lng+180)/360*sc, y=(0.5-Math.log((1+Math.sin(lat*Math.PI/180))/(1-Math.sin(lat*Math.PI/180)))/(4*Math.PI))*sc;
+    const cx=(cLng+180)/360*sc, cy=(0.5-Math.log((1+Math.sin(cLat*Math.PI/180))/(1-Math.sin(cLat*Math.PI/180)))/(4*Math.PI))*sc;
+    return {x:cv.width/2+(x-cx), y:cv.height/2+(y-cy)};
+  }
+
+  function draw(){
+    if(!cv.width) return;
+    ctx.fillStyle='#0a0a18'; ctx.fillRect(0,0,cv.width,cv.height);
+    // Grid
+    ctx.strokeStyle='#1a1a28'; ctx.lineWidth=1;
+    for(let i=0;i<20;i++){
+      const lat=47.34+i*0.005; const p1=proj(lat,8.47),p2=proj(lat,8.63);
+      ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+    }
+    for(let i=0;i<20;i++){
+      const lng=8.47+i*0.009; const p1=proj(47.34,lng),p2=proj(47.43,lng);
+      ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+    }
+    // City labels
+    ctx.fillStyle='#444466'; ctx.font='bold 10px Barlow Condensed,sans-serif'; ctx.textAlign='center';
+    [['ZÜRICH HB',47.3782,8.5410],['ALTSTADT',47.3750,8.5413],['SEEFELD',47.3628,8.5560],
+     ['ALTSTETTEN',47.3920,8.4900],['WIEDIKON',47.3660,8.5170],['RIESBACH',47.3650,8.5550],
+     ['HOTTINGEN',47.3740,8.5640],['AUSSERSIHL',47.3790,8.5280]
+    ].forEach(([n,la,ln])=>{ const p=proj(la,ln); ctx.fillText(n,p.x,p.y); });
+    // Boss zones
+    [
+      {lat:47.3785,lng:8.5415,name:'⚡ HB',color:'#FFDD57'},
+      {lat:47.3700,lng:8.5200,name:'⚡ Lindenhügel',color:'#FFDD57'},
+      {lat:47.3648,lng:8.5510,name:'⚡ Bellevue',color:'#FFDD57'},
+    ].forEach(z => {
+      const p=proj(z.lat,z.lng);
+      ctx.strokeStyle=z.color; ctx.lineWidth=2; ctx.setLineDash([6,3]);
+      ctx.strokeRect(p.x-28,p.y-18,56,36);
+      ctx.setLineDash([]);
+      ctx.fillStyle=z.color+'25'; ctx.fillRect(p.x-28,p.y-18,56,36);
+      ctx.fillStyle=z.color; ctx.font='bold 9px Barlow Condensed,sans-serif';
+      ctx.fillText(z.name,p.x,p.y+4);
+    });
+    // Draw route
+    if(routePoints && routePoints.length>1){
+      const pts=routePoints.map(p=>proj(p[1],p[0]));
+      ctx.strokeStyle='#00C2A8'; ctx.lineWidth=4; ctx.lineCap='round';
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+      pts.forEach(p=>ctx.lineTo(p.x,p.y)); ctx.stroke();
+    }
+  }
+
+  cv.addEventListener('mousedown',e=>{drag=true;ds={x:e.clientX,y:e.clientY};dc={lat:cLat,lng:cLng};});
+  cv.addEventListener('mousemove',e=>{
+    if(!drag)return;
+    const dx=e.clientX-ds.x,dy=e.clientY-ds.y,sc=256*Math.pow(2,zoom);
+    cLng=dc.lng-dx/sc*360; cLat=dc.lat+dy/sc*360/Math.cos(cLat*Math.PI/180)*0.7; draw();
+  });
+  cv.addEventListener('mouseup',()=>drag=false);
+  cv.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(8,Math.min(18,zoom+(e.deltaY<0?.5:-.5)));draw();},{passive:false});
+  cv.addEventListener('touchstart',e=>{if(e.touches.length===1){ds={x:e.touches[0].clientX,y:e.touches[0].clientY};dc={lat:cLat,lng:cLng};drag=true;}});
+  cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drag||!ds)return;const dx=e.touches[0].clientX-ds.x,dy=e.touches[0].clientY-ds.y,sc=256*Math.pow(2,zoom);cLng=dc.lng-dx/sc*360;cLat=dc.lat+dy/sc*360/Math.cos(cLat*Math.PI/180)*0.7;draw();},{passive:false});
+  cv.addEventListener('touchend',()=>drag=false);
+
+  window.locateMe=()=>{
+    navigator.geolocation?.getCurrentPosition(pos=>{
+      cLat=pos.coords.latitude; cLng=pos.coords.longitude; zoom=14.5; draw();
+      const sub=document.getElementById('map-sub'); if(sub) sub.textContent='Dein Standort · GPS aktiv';
+    },()=>{},{enableHighAccuracy:true});
+  };
+  window.zoomIn=()=>{zoom=Math.min(18,zoom+.5);draw();};
+  window.zoomOut=()=>{zoom=Math.max(8,zoom-.5);draw();};
+
+  window.addEventListener('resize',resize);
+  resize();
+  // Expose draw for route updates
+  window._canvasDraw = draw;
+}
+
+function initBlazMap(){
+  if(blazMap) return;
+  if(typeof mapboxgl === 'undefined'){
+    console.log('BlazRun: Using canvas map (preview mode)');
+    initCanvasFallback();
+    return;
+  }
+  mapboxgl.accessToken = MAPBOX_TOKEN;
+  blazMap = new mapboxgl.Map({
+    container: 'blazmap',
+    style: 'mapbox://styles/mapbox/dark-v11',
+    center: [8.5400, 47.3769],
+    zoom: 12.8,
+    attributionControl: false
+  });
+  blazMap.addControl(new mapboxgl.AttributionControl({compact:true}));
+  blazMap.on('load', () => {
+    addMapLayers();
+    loadTerritories();
+    locateMe();
+  });
+}
+
+function addMapLayers(){
+  // My territories
+  blazMap.addSource('mine-src', {type:'geojson', data:{type:'FeatureCollection',features:[]}});
+  blazMap.addLayer({id:'mine-fill', type:'fill', source:'mine-src', paint:{'fill-color':'#00C2A8','fill-opacity':0.22}});
+  blazMap.addLayer({id:'mine-line', type:'line', source:'mine-src', paint:{'line-color':'#00C2A8','line-width':2.5}});
+  // Enemy territories
+  blazMap.addSource('enemy-src', {type:'geojson', data:{type:'FeatureCollection',features:[]}});
+  blazMap.addLayer({id:'enemy-fill', type:'fill', source:'enemy-src', paint:{'fill-color':'#ff5555','fill-opacity':0.18}});
+  blazMap.addLayer({id:'enemy-line', type:'line', source:'enemy-src', paint:{'line-color':'#ff5555','line-width':2}});
+  // Boss zones
+  blazMap.addSource('boss-src', {type:'geojson', data:{type:'FeatureCollection', features:[
+    {type:'Feature', geometry:{type:'Polygon', coordinates:[[[8.5388,47.3778],[8.5402,47.3768],[8.5422,47.3765],[8.5442,47.3772],[8.5452,47.3785],[8.5445,47.3798],[8.5428,47.3805],[8.5408,47.3802],[8.5392,47.3792],[8.5388,47.3778]]]}, properties:{name:'⚡ Zürich HB', xp:500}},
+    {type:'Feature', geometry:{type:'Polygon', coordinates:[[[8.5165,47.3695],[8.5188,47.3672],[8.5218,47.3662],[8.5248,47.3668],[8.5268,47.3688],[8.5262,47.3712],[8.5238,47.3728],[8.5205,47.3730],[8.5178,47.3718],[8.5165,47.3695]]]}, properties:{name:'⚡ Lindenhügel', xp:350}},
+    {type:'Feature', geometry:{type:'Polygon', coordinates:[[[8.5478,47.3648],[8.5498,47.3632],[8.5522,47.3628],[8.5545,47.3638],[8.5555,47.3658],[8.5542,47.3675],[8.5518,47.3682],[8.5492,47.3675],[8.5478,47.3648]]]}, properties:{name:'⚡ Bellevue', xp:400}},
+  ]}});
+  blazMap.addLayer({id:'boss-fill', type:'fill', source:'boss-src', paint:{'fill-color':'#FFDD57','fill-opacity':0.12}});
+  blazMap.addLayer({id:'boss-line', type:'line', source:'boss-src', paint:{'line-color':'#FFDD57','line-width':2.5,'line-dasharray':[5,3]}});
+  blazMap.addLayer({id:'boss-label', type:'symbol', source:'boss-src', layout:{'text-field':['get','name'],'text-size':11,'text-font':['DIN Pro Bold','Arial Unicode MS Bold']}, paint:{'text-color':'#FFDD57','text-halo-color':'rgba(0,0,0,0.9)','text-halo-width':2}});
+  // Route line
+  blazMap.addSource('route-src', {type:'geojson', data:{type:'Feature',geometry:{type:'LineString',coordinates:[]}}});
+  blazMap.addLayer({id:'route-glow', type:'line', source:'route-src', paint:{'line-color':'#00F5D4','line-width':14,'line-opacity':0.1}});
+  blazMap.addLayer({id:'route-line', type:'line', source:'route-src', paint:{'line-color':'#00C2A8','line-width':5,'line-cap':'round','line-join':'round'}});
+  // Click handlers
+  blazMap.on('click','boss-fill', e => {
+    const p = e.features[0].properties;
+    new mapboxgl.Popup({closeButton:true,maxWidth:'200px'})
+      .setLngLat(e.lngLat)
+      .setHTML(`<div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#FFDD57">${p.name}</div><div style="font-size:12px;color:#aaa;margin-top:4px">+${p.xp} XP · Laufe hier vorbei!</div><button onclick="startRun()" style="margin-top:10px;background:#FFDD57;color:#003D35;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;width:100%">🏃 Lauf starten</button>`)
+      .addTo(blazMap);
+  });
+  blazMap.on('click','mine-fill', () => {
+    new mapboxgl.Popup({closeButton:true,maxWidth:'200px'})
+      .setLngLat(blazMap.getCenter())
+      .setHTML(`<div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#00C2A8">🏴 Deine Zone</div><div style="font-size:12px;color:#aaa;margin-top:4px">Verteidige sie!</div>`)
+      .addTo(blazMap);
+  });
+  blazMap.on('click','enemy-fill', () => {
+    new mapboxgl.Popup({closeButton:true,maxWidth:'200px'})
+      .setLngLat(blazMap.getCenter())
+      .setHTML(`<div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#ff5555">⚔️ Gegner Zone</div><div style="font-size:12px;color:#aaa;margin-top:4px">Laufe hier um sie zu erobern!</div><button onclick="startRun()" style="margin-top:10px;background:#ff5555;color:white;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;width:100%">🏃 Angreifen!</button>`)
+      .addTo(blazMap);
+  });
+  ['boss-fill','mine-fill','enemy-fill'].forEach(l => {
+    blazMap.on('mouseenter',l,() => blazMap.getCanvas().style.cursor='pointer');
+    blazMap.on('mouseleave',l,() => blazMap.getCanvas().style.cursor='');
+  });
+  runMapReady = true;
+}
+
+async function loadTerritories(){
+  if(!blazMap || !sb) return;
+  try {
+    const {data:{user}} = await sb.auth.getUser();
+    if(!user) return;
+    const {data:territories} = await sb.from('territories').select('*').order('created_at',{ascending:false}).limit(500);
+    if(!territories) return;
+    const myF=[], enemyF=[];
+    territories.forEach(t => {
+      if(!t.polygon) return;
+      try {
+        const coords = JSON.parse(t.polygon);
+        const f = {type:'Feature', geometry:{type:'Polygon',coordinates:[coords]}, properties:{user_id:t.user_id}};
+        if(t.user_id === user.id) myF.push(f); else enemyF.push(f);
+      } catch(e){}
+    });
+    if(blazMap.getSource('mine-src')) blazMap.getSource('mine-src').setData({type:'FeatureCollection',features:myF});
+    if(blazMap.getSource('enemy-src')) blazMap.getSource('enemy-src').setData({type:'FeatureCollection',features:enemyF});
+    // Update map stats
+    const zc = document.getElementById('map-zone-count');
+    if(zc) zc.textContent = myF.length;
+  } catch(e){}
+}
+
+function setPlayerMarker(lngLat){
+  if(playerMarker) playerMarker.remove();
+  const el = document.createElement('div');
+  el.style.cssText = 'width:20px;height:20px;border-radius:50%;background:#00C2A8;border:3px solid white;box-shadow:0 0 0 8px rgba(0,194,168,0.18);';
+  playerMarker = new mapboxgl.Marker({element:el}).setLngLat(lngLat).addTo(blazMap);
+}
+
+function locateMe(){
+  navigator.geolocation?.getCurrentPosition(pos => {
+    const c = [pos.coords.longitude, pos.coords.latitude];
+    if(blazMap) { blazMap.flyTo({center:c, zoom:14.5, speed:1.5}); setPlayerMarker(c); }
+    const sub = document.getElementById('map-sub');
+    if(sub) sub.textContent = 'Dein Standort · GPS aktiv';
+  }, ()=>{}, {enableHighAccuracy:true, timeout:8000});
+}
+
+function zoomIn(){ if(blazMap) blazMap.zoomIn(); }
+function zoomOut(){ if(blazMap) blazMap.zoomOut(); }
+
+function routeToTerritory(coords){
+  if(coords.length < 2) return null;
+  const buf = 0.0003;
+  let left=[], right=[];
+  for(let i=0;i<coords.length;i++){
+    const p=coords[i], prev=coords[Math.max(0,i-1)];
+    const angle = Math.atan2(p[1]-prev[1], p[0]-prev[0]);
+    left.push([p[0]+Math.cos(angle+Math.PI/2)*buf, p[1]+Math.sin(angle+Math.PI/2)*buf*0.6]);
+    right.push([p[0]+Math.cos(angle-Math.PI/2)*buf, p[1]+Math.sin(angle-Math.PI/2)*buf*0.6]);
+  }
+  const poly = [...left, ...right.reverse()];
+  poly.push(poly[0]);
+  return poly;
+}
+
+async function saveTerritory(coords){
+  if(!sb || coords.length < 3) return;
+  try {
+    const {data:{user}} = await sb.auth.getUser();
+    if(!user) return;
+    const {data:profile} = await sb.from('profiles').select('username').eq('id',user.id).single();
+    const poly = routeToTerritory(coords);
+    if(!poly) return;
+    await sb.from('territories').insert({
+      user_id: user.id,
+      username: profile?.username || 'Runner',
+      polygon: JSON.stringify(poly),
+      xp: Math.max(5, Math.floor(coords.length * 2)),
+      created_at: new Date().toISOString()
+    });
+    loadTerritories();
+  } catch(e){}
+}
+
+
+// Popup Style (cleanup)
+const popupStyle = document.createElement('style');
+popupStyle.textContent='';
+document.head.appendChild(popupStyle);
+</script>
+<!-- AVATAR PICKER OVERLAY -->
+<div id="avatar-picker-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#12122A;border:1px solid #1e1e35;border-radius:20px;padding:28px;width:100%;max-width:420px;animation:scalein .3s ease">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#FFDD57">Profilbild wählen</div>
+      <div onclick="closeAvatarPicker()" style="cursor:pointer;color:#8888aa;font-size:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#1a1a30;border-radius:50%">✕</div>
+    </div>
+
+    <!-- EIGENES FOTO -->
+    <div onclick="document.getElementById('photo-upload').click()" style="display:flex;align-items:center;gap:12px;background:#1a1a30;border:2px dashed #1e1e35;border-radius:12px;padding:14px;cursor:pointer;margin-bottom:18px;transition:all .2s" onmouseover="this.style.borderColor='#00C2A840'" onmouseout="this.style.borderColor='#1e1e35'">
+      <div style="width:44px;height:44px;border-radius:50%;background:#00C2A820;border:2px solid #00C2A840;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📷</div>
+      <div>
+        <div style="font-size:14px;font-weight:500;color:#fff">Eigenes Foto hochladen</div>
+        <div style="font-size:12px;color:#8888aa;margin-top:2px">JPG, PNG — max. 5MB</div>
+      </div>
+      <input id="photo-upload" type="file" accept="image/*" style="display:none" onchange="pickPhoto(this)"/>
+    </div>
+
+    <div style="font-size:11px;color:#444466;letter-spacing:.07em;text-transform:uppercase;margin-bottom:12px">oder BlazRun Avatar</div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+      <!-- Avatar 1: Schuh -->
+      <div class="apick" onclick="pickAvatar(1)" style="background:#12122A;border:2px solid #1e1e35;border-radius:14px;padding:14px 8px;cursor:pointer;text-align:center;transition:all .2s">
+        <svg width="70" height="70" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="52" cy="14" r="7" fill="#00C2A8"/>
+          <path d="M46 10 Q52 6 58 10 Q58 7 52 6 Q46 7 46 10Z" fill="#009880"/>
+          <path d="M38 28 Q40 22 48 22 Q54 22 56 26 L52 42 L44 40 Z" fill="#00C2A8"/>
+          <path d="M44 28 Q36 32 30 26" stroke="#00C2A8" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <path d="M52 30 Q60 34 64 30" stroke="#00C2A8" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <path d="M44 40 L52 42 L54 52 L46 52 Z" fill="#009880"/>
+          <path d="M46 52 Q42 60 34 62" stroke="#00D4B8" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <ellipse cx="32" cy="64" rx="6" ry="3" fill="#FFDD57"/>
+          <path d="M26 63 Q32 60 38 63" stroke="#FFDD57" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M50 52 Q56 58 58 66" stroke="#00D4B8" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <ellipse cx="60" cy="68" rx="6" ry="3" fill="#FFDD57"/>
+          <line x1="14" y1="30" x2="22" y2="30" stroke="#00C2A8" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+          <line x1="12" y1="36" x2="20" y2="36" stroke="#00C2A8" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
+          <line x1="16" y1="42" x2="22" y2="42" stroke="#00C2A8" stroke-width="1.5" stroke-linecap="round" opacity=".3"/>
+          <text x="48" y="34" text-anchor="middle" fill="#FFDD57" font-size="5" font-weight="700" font-family="Barlow Condensed,sans-serif">BR</text>
+        </svg>
+        <div style="font-size:11px;color:#8888aa;margin-top:6px">🏃 Läufer</div>
+      </div>
+      <!-- Avatar 2: Shirt -->
+      <div class="apick" onclick="pickAvatar(2)" style="background:#12122A;border:2px solid #1e1e35;border-radius:14px;padding:14px 8px;cursor:pointer;text-align:center;transition:all .2s">
+        <svg width="70" height="70" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M20 30 L14 20 L26 16 Q30 24 40 24 Q50 24 54 16 L66 20 L60 30 L56 28 L56 66 L24 66 L24 28 Z" fill="#00C2A8"/><path d="M14 20 L20 30 L24 28 L24 22 Z" fill="#009880"/><path d="M66 20 L60 30 L56 28 L56 22 Z" fill="#009880"/><rect x="28" y="36" width="24" height="16" rx="4" fill="#FFDD57"/><path d="M32 48 L35 38 L38 44 L40 41 L44 46" stroke="#003D35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><text x="40" y="56" text-anchor="middle" fill="#FFDD57" font-size="5" font-weight="700" font-family="Barlow Condensed,sans-serif">BLAZRUN</text></svg>
+        <div style="font-size:11px;color:#8888aa;margin-top:6px">👕 Shirt</div>
+      </div>
+      <!-- Avatar 3: Flasche -->
+      <div class="apick" onclick="pickAvatar(3)" style="background:#12122A;border:2px solid #1e1e35;border-radius:14px;padding:14px 8px;cursor:pointer;text-align:center;transition:all .2s">
+        <svg width="70" height="70" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <!-- Deckel -->
+          <rect x="32" y="8" width="16" height="7" rx="3" fill="#007a68"/>
+          <!-- Hals -->
+          <rect x="30" y="14" width="20" height="8" rx="3" fill="#009880"/>
+          <!-- Flasche Körper -->
+          <rect x="24" y="22" width="32" height="48" rx="10" fill="#00C2A8"/>
+          <!-- Highlight -->
+          <rect x="27" y="24" width="7" height="44" rx="4" fill="#00D4B8" opacity=".4"/>
+          <!-- Label Hintergrund -->
+          <rect x="26" y="34" width="28" height="20" rx="3" fill="#FFDD57"/>
+          <!-- Logo Linie (M) -->
+          <path d="M33 50 L33 38 L40 44 L47 38 L47 50" stroke="#003D35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <!-- Label Text BLAZRUN -->
+          <text x="40" y="58" text-anchor="middle" fill="#FFDD57" font-size="5.5" font-weight="700" font-family="Barlow Condensed,sans-serif" letter-spacing="0.5">BLAZRUN</text>
+          <!-- Griff -->
+          <path d="M56 28 Q64 28 64 38 Q64 48 56 48" fill="none" stroke="#009880" stroke-width="3" stroke-linecap="round"/>
+          <!-- Wasser Linie -->
+          <rect x="24" y="52" width="32" height="18" rx="0 0 10 10" fill="#009880" opacity=".3"/>
+        </svg>
+        <div style="font-size:11px;color:#8888aa;margin-top:6px">🧴 Trinkflasche</div>
+      </div>
+    </div>
+
+    <button onclick="saveAvatarChoice()" style="width:100%;padding:13px;background:#00C2A8;color:#003D35;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px">✓ Speichern</button>
+  </div>
+</div>
+
+<!-- ══ CHALLENGE MODAL ══ -->
+<div id="challenge-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:600;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#12122A;border:1px solid #1e1e35;border-radius:22px;padding:28px;width:100%;max-width:480px;animation:scalein .3s ease;max-height:90vh;overflow-y:auto">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+      <div>
+        <div style="font-family:var(--font-d);font-size:24px;font-weight:900;color:var(--teal)">⚔️ Freund herausfordern</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:3px">Wer läuft weiter oder länger?</div>
+      </div>
+      <div onclick="closeChallenge()" style="width:34px;height:34px;background:#1a1a30;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:18px">✕</div>
+    </div>
+
+    <!-- Schritt 1: Freund einladen -->
+    <div id="ch-step1">
+      <div style="font-size:11px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;font-weight:600;margin-bottom:12px">Schritt 1 — Freund wählen</div>
+
+      <!-- Direktlink Einladung -->
+      <div style="background:#0D1A18;border:1px solid var(--teal-border);border-radius:14px;padding:16px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;color:var(--teal);margin-bottom:8px">📲 Einladungslink teilen</div>
+        <div style="background:#1a1a30;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div id="invite-link" style="font-size:12px;color:var(--text2);flex:1;font-family:var(--mono)">blazrun.app/join/BLAZ-4729</div>
+          <button onclick="copyLink()" style="background:var(--teal);color:#003D35;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer">Kopieren</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="shareWhatsApp()" style="flex:1;background:#25D366;color:white;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.134.562 4.133 1.543 5.867L0 24l6.291-1.518A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.87 0-3.634-.49-5.17-1.347l-.37-.216-3.737.902.945-3.635-.241-.382A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+            WhatsApp
+          </button>
+          <button onclick="shareSMS()" style="flex:1;background:#1a1a30;color:var(--text);border:1px solid #1e1e35;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer">💬 SMS</button>
+        </div>
+      </div>
+
+      <!-- Oder Username eingeben -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <div style="font-size:12px;color:var(--text3)">oder Username eingeben</div>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <input id="friend-username" class="form-input" type="text" placeholder="Username eingeben..." style="flex:1"/>
+        <button onclick="searchFriend()" class="btn-t" style="white-space:nowrap">Suchen</button>
+      </div>
+
+      <!-- Freunde Vorschläge -->
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Deine Freunde in der Nähe</div>
+      <div id="friend-suggestions" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+        
+          <div style="width:8px;height:8px;background:#00ff88;border-radius:50%;animation:pulse 2s infinite"></div>
+        </div>
+        
+          <div style="width:8px;height:8px;background:var(--text3);border-radius:50%"></div>
+        </div>
+        
+          <div style="width:8px;height:8px;background:var(--text3);border-radius:50%"></div>
+        </div>
+      </div>
+
+      <button onclick="goToStep2()" class="btn-t" style="width:100%;padding:13px;font-size:15px" id="step1-next" disabled>Weiter →</button>
+    </div>
+
+    <!-- Schritt 2: Challenge konfigurieren -->
+    <div id="ch-step2" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <button onclick="goToStep1()" style="background:#1a1a30;border:1px solid #1e1e35;border-radius:8px;padding:6px 12px;color:var(--text2);font-size:12px;cursor:pointer">← Zurück</button>
+        <div style="font-size:11px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;font-weight:600">Schritt 2 — Challenge konfigurieren</div>
+      </div>
+
+      <!-- Gegner Preview -->
+      <div id="opponent-preview" style="background:#0D1A18;border:1px solid var(--teal-border);border-radius:14px;padding:14px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
+        <div id="opp-av" style="width:46px;height:46px;border-radius:50%;background:var(--yellow-dim);color:var(--yellow);font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">M</div>
+        <div>
+          <div id="opp-name" style="font-size:15px;font-weight:700;color:var(--teal)">—</div>
+          <div id="opp-loc" style="font-size:12px;color:var(--text2);margin-top:2px">📍 Affoltern · vs. Du in Altstetten</div>
+        </div>
+        <div style="margin-left:auto;font-size:26px">⚔️</div>
+      </div>
+
+      <!-- Challenge Typ -->
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px">Art der Challenge</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+        <div class="ch-type-opt selected" id="opt-dist" onclick="selectType('dist',this)" style="display:flex;align-items:center;gap:12px;background:var(--teal-dim);border:2px solid var(--teal-border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s">
+          <div style="font-size:28px">🏃</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:var(--teal)">Wer läuft weiter?</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Jeder läuft von seinem Zuhause los. Am Ende vergleicht ihr die Gesamtdistanz.</div>
+          </div>
+          <div id="check-dist" style="color:var(--teal);font-size:20px">✓</div>
+        </div>
+        <div class="ch-type-opt" id="opt-time" onclick="selectType('time',this)" style="display:flex;align-items:center;gap:12px;background:#1a1a30;border:2px solid #1e1e35;border-radius:12px;padding:14px;cursor:pointer;transition:all .2s">
+          <div style="font-size:28px">⏱️</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">Wer läuft länger?</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Wer ist länger unterwegs gewinnt — egal wie weit.</div>
+          </div>
+          <div id="check-time" style="color:var(--text3);font-size:20px">○</div>
+        </div>
+        <div class="ch-type-opt" id="opt-pace" onclick="selectType('pace',this)" style="display:flex;align-items:center;gap:12px;background:#1a1a30;border:2px solid #1e1e35;border-radius:12px;padding:14px;cursor:pointer;transition:all .2s">
+          <div style="font-size:28px">⚡</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">Wer ist schneller?</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Beste Pace (min/km) gewinnt — jeder läuft wann er will.</div>
+          </div>
+          <div id="check-pace" style="color:var(--text3);font-size:20px">○</div>
+        </div>
+        <div class="ch-type-opt" id="opt-zones" onclick="selectType('zones',this)" style="display:flex;align-items:center;gap:12px;background:#1a1a30;border:2px solid #1e1e35;border-radius:12px;padding:14px;cursor:pointer;transition:all .2s">
+          <div style="font-size:28px">🏴</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">Wer erobert mehr Zonen?</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Wer in der Zeit mehr Gebiete übernimmt gewinnt.</div>
+          </div>
+          <div id="check-zones" style="color:var(--text3);font-size:20px">○</div>
+        </div>
+      </div>
+
+      <!-- Zeitraum -->
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px">Zeitraum</div>
+      <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="dur-btn active" onclick="selectDur(this,'1 Tag')" style="flex:1;padding:10px;background:var(--teal-dim);border:2px solid var(--teal-border);border-radius:10px;color:var(--teal);font-size:13px;font-weight:600;cursor:pointer;min-width:80px">1 Tag</button>
+        <button class="dur-btn" onclick="selectDur(this,'3 Tage')" style="flex:1;padding:10px;background:#1a1a30;border:2px solid #1e1e35;border-radius:10px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;min-width:80px">3 Tage</button>
+        <button class="dur-btn" onclick="selectDur(this,'1 Woche')" style="flex:1;padding:10px;background:#1a1a30;border:2px solid #1e1e35;border-radius:10px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;min-width:80px">1 Woche</button>
+        <button class="dur-btn" onclick="selectDur(this,'1 Monat')" style="flex:1;padding:10px;background:#1a1a30;border:2px solid #1e1e35;border-radius:10px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;min-width:80px">1 Monat</button>
+      </div>
+
+      <!-- Einsatz -->
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px">Einsatz (optional)</div>
+      <div style="background:#1a1a30;border:1px solid #1e1e35;border-radius:12px;padding:14px;margin-bottom:20px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="radio" name="stake" value="none" checked style="accent-color:var(--teal)"/>
+            <div><div style="font-size:13px;font-weight:500">Kein Einsatz — nur zum Spass</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="radio" name="stake" value="xp" style="accent-color:var(--teal)"/>
+            <div><div style="font-size:13px;font-weight:500">XP-Einsatz</div><div style="font-size:11px;color:var(--text2)">Verlierer zahlt 100 XP an Gewinner</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="radio" name="stake" value="badge" style="accent-color:var(--teal)"/>
+            <div><div style="font-size:13px;font-weight:500">Ehren-Badge</div><div style="font-size:11px;color:var(--text2)">Gewinner bekommt exklusives "Duell-König" Abzeichen</div></div>
+          </label>
+        </div>
+      </div>
+
+      <button onclick="sendChallenge()" style="width:100%;padding:14px;background:var(--teal);color:#003D35;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-d);letter-spacing:.5px;transition:all .2s">⚔️ Challenge senden!</button>
+    </div>
+
+    <!-- Schritt 3: Bestätigung -->
+    <div id="ch-step3" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:60px;margin-bottom:16px;animation:fadein .5s ease">⚔️</div>
+      <div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--teal);margin-bottom:8px">Challenge gesendet!</div>
+      <div id="sent-summary" style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.7"></div>
+      <!-- Vorschau Duell -->
+      <div style="background:#0D1A18;border:1px solid var(--teal-border);border-radius:16px;padding:20px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:16px;justify-content:center">
+          <div style="text-align:center">
+            <div style="width:56px;height:56px;border-radius:50%;background:var(--teal-dim);border:2px solid var(--teal);color:var(--teal);font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 6px">Du</div>
+            <div style="font-size:11px;color:var(--text2)" id="my-district">Altstetten</div>
+            <div style="font-family:var(--font-d);font-size:22px;font-weight:900;color:var(--teal);margin-top:4px">0 km</div>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:var(--text3)">VS</div>
+          <div style="text-align:center">
+            <div id="opp-av3" style="width:56px;height:56px;border-radius:50%;background:var(--yellow-dim);border:2px solid var(--yellow);color:var(--yellow);font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 6px">M</div>
+            <div id="opp-district" style="font-size:11px;color:var(--text2)">Affoltern</div>
+            <div style="font-family:var(--font-d);font-size:22px;font-weight:900;color:var(--yellow);margin-top:4px">⏳ wartet</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;background:#1a1a30;border-radius:10px;padding:10px;font-size:12px;color:var(--text2)">
+          🕐 Warte bis <span id="opp-name3" style="color:var(--teal)">Mia</span> die Challenge annimmt. Du wirst benachrichtigt!
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="closeChallenge()" style="flex:1;padding:12px;background:#1a1a30;color:var(--text2);border:1px solid #1e1e35;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">Schliessen</button>
+        <button onclick="sp('duels');closeChallenge();" style="flex:1;padding:12px;background:var(--teal);color:#003D35;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">⚔️ Zu Duellen</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══ CHALLENGE MODAL ═══
+let selectedFriend = null;
+let selectedType = 'dist';
+let selectedDur = '1 Tag';
+
+function openChallenge(){
+  document.getElementById('challenge-overlay').style.display='flex';
+  goToStep1();
+}
+function closeChallenge(){
+  document.getElementById('challenge-overlay').style.display='none';
+}
+
+function goToStep1(){
+  document.getElementById('ch-step1').style.display='block';
+  document.getElementById('ch-step2').style.display='none';
+  document.getElementById('ch-step3').style.display='none';
+}
+
+function goToStep2(){
+  if(!selectedFriend) return;
+  document.getElementById('ch-step1').style.display='none';
+  document.getElementById('ch-step2').style.display='block';
+}
+
+function selectFriend(name, district){
+  selectedFriend = {name, district};
+  // Highlight selected
+  document.querySelectorAll('.friend-suggest-item').forEach(el=>{
+    el.style.borderColor = el.querySelector('div div').textContent===name ? 'var(--teal)' : '#1e1e35';
+    el.style.background = el.querySelector('div div').textContent===name ? 'var(--teal-dim)' : '#1a1a30';
+  });
+  // Update step2 preview
+  document.getElementById('opp-name').textContent = name;
+  document.getElementById('opp-loc').textContent = `📍 ${district} · vs. Du in Altstetten`;
+  document.getElementById('opp-av').textContent = name[0];
+  // Enable next button
+  const btn = document.getElementById('step1-next');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  // Auto advance
+  setTimeout(goToStep2, 300);
+}
+
+function searchFriend(){
+  const val = document.getElementById('friend-username').value.trim();
+  if(!val) return;
+  selectFriend(val, 'Unbekannt');
+}
+
+function selectType(type, el){
+  selectedType = type;
+  ['dist','time','pace','zones'].forEach(t=>{
+    const opt = document.getElementById('opt-'+t);
+    const chk = document.getElementById('check-'+t);
+    if(t===type){
+      opt.style.background='var(--teal-dim)';
+      opt.style.borderColor='var(--teal)';
+      chk.textContent='✓'; chk.style.color='var(--teal)';
+    } else {
+      opt.style.background='#1a1a30';
+      opt.style.borderColor='#1e1e35';
+      chk.textContent='○'; chk.style.color='var(--text3)';
+    }
+  });
+}
+
+function selectDur(el, dur){
+  selectedDur = dur;
+  document.querySelectorAll('.dur-btn').forEach(b=>{
+    b.style.background='#1a1a30';
+    b.style.borderColor='#1e1e35';
+    b.style.color='var(--text2)';
+  });
+  el.style.background='var(--teal-dim)';
+  el.style.borderColor='var(--teal)';
+  el.style.color='var(--teal)';
+}
+
+function sendChallenge(){
+  if(!selectedFriend) return;
+  const typeLabels = {dist:'Wer läuft weiter', time:'Wer läuft länger', pace:'Wer ist schneller', zones:'Wer erobert mehr Zonen'};
+  document.getElementById('sent-summary').innerHTML =
+    `<strong style="color:var(--teal)">${selectedFriend.name}</strong> wurde herausgefordert!<br>` +
+    `<strong>${typeLabels[selectedType]}</strong> · ${selectedDur}<br>` +
+    `Du vs. ${selectedFriend.name}`;
+  document.getElementById('opp-name3').textContent = selectedFriend.name;
+  document.getElementById('opp-district').textContent = selectedFriend.district;
+  document.getElementById('opp-av3').textContent = selectedFriend.name[0];
+  document.getElementById('ch-step2').style.display='none';
+  document.getElementById('ch-step3').style.display='block';
+  showNotif('⚔️ Challenge gesendet an ' + selectedFriend.name + '!');
+}
+
+function copyLink(){
+  const link = document.getElementById('invite-link').textContent;
+  navigator.clipboard?.writeText('https://' + link).catch(()=>{});
+  showNotif('📋 Link kopiert!');
+}
+
+function shareWhatsApp(){
+  const text = encodeURIComponent('Ich fordere dich zu einer BlazRun Challenge heraus! 🔥 Wer läuft weiter? Klick hier: https://blazrun.app/join/BLAZ-4729');
+  window.open('https://wa.me/?text=' + text, '_blank');
+}
+
+function shareSMS(){
+  const text = encodeURIComponent('BlazRun Challenge: https://blazrun.app/join/BLAZ-4729 🔥');
+  window.open('sms:?body=' + text);
+}
+
+// Close on backdrop click
+document.getElementById('challenge-overlay').addEventListener('click', function(e){
+  if(e.target === this) closeChallenge();
+});
+</script>
+
+</body>
+</html>
